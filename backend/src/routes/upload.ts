@@ -1,3 +1,4 @@
+﻿
 import { Router, Response } from 'express';
 import multer from 'multer';
 import axios from 'axios';
@@ -40,7 +41,6 @@ router.post(
     const jdText = req.body?.jdText as string | undefined;
     const file = req.file;
 
-    // --- Input validation ---
     if (!file) {
       res.status(400).json({ error: 'Resume file is required' });
       return;
@@ -50,7 +50,7 @@ router.post(
       return;
     }
 
-    // --- Forward to Python parse microservice ---
+    // ── Forward to Python parse + analysis microservice ───────────────────────
     const form = new FormData();
     form.append('resume_file', file.buffer, {
       filename: file.originalname,
@@ -58,16 +58,18 @@ router.post(
     });
     form.append('jd_text', jdText);
 
-    let parsed: { resume: Record<string, unknown>; jd: Record<string, unknown> };
+    let report: Record<string, unknown>;
     try {
+      console.log('[upload] Calling Python analysis API...');
       const response = await axios.post(`${PYTHON_API}/parse`, form, {
         headers: form.getHeaders(),
-        timeout: 60_000, // 60 s — LLM can be slow
+        timeout: 120_000,
       });
-      parsed = response.data;
+      report = response.data as Record<string, unknown>;
+      const rec = (report.decision as Record<string, unknown>)?.recommendation;
+      console.log('[upload] Pipeline complete. Recommendation:', rec);
     } catch (err: unknown) {
       console.error('[upload] Python parse API error:', err);
-
       if (axios.isAxiosError(err)) {
         if (err.code === 'ECONNREFUSED') {
           res.status(503).json({
@@ -76,23 +78,39 @@ router.post(
           return;
         }
         if (err.response) {
+          const detail = (err.response.data as Record<string, string>)?.detail;
+          const isQuota =
+            detail?.includes('RESOURCE_EXHAUSTED') || detail?.includes('Quota exceeded');
           res.status(502).json({
-            error: err.response.data?.detail || 'Parse service returned an error',
+            error: isQuota
+              ? 'Gemini API daily quota reached. Please wait a few minutes and try again, or upgrade your API key plan.'
+              : detail || 'Parse service returned an error',
           });
           return;
         }
       }
-
-      res.status(500).json({ error: 'Failed to parse documents — please try again.' });
+      res.status(500).json({ error: 'Failed to analyse documents. Please try again.' });
       return;
     }
 
-    // --- Persist to database ---
+    // ── Persist to database ────────────────────────────────────────────────────
     try {
+      const resumeJson = JSON.stringify(report.resume);
+      const jdJson = JSON.stringify(report.jd);
+      const reportJson = JSON.stringify(report);
+
       await pool.query(
-        `INSERT INTO user_documents (user_id, parsed_resume, parsed_jd)
-         VALUES ($1, $2, $3)`,
-        [userId, JSON.stringify(parsed.resume), JSON.stringify(parsed.jd)]
+        `INSERT INTO user_documents (user_id, parsed_resume, parsed_jd, analysis_report)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT DO NOTHING`,
+        [userId, resumeJson, jdJson, reportJson]
+      );
+
+      await pool.query(
+        `UPDATE user_documents
+         SET parsed_resume = $2, parsed_jd = $3, analysis_report = $4, uploaded_at = NOW()
+         WHERE user_id = $1`,
+        [userId, resumeJson, jdJson, reportJson]
       );
 
       await pool.query(
@@ -101,26 +119,23 @@ router.post(
       );
     } catch (dbErr) {
       console.error('[upload] DB insert error:', dbErr);
-      res.status(500).json({ error: 'Failed to save parsed documents to database.' });
+      res.status(500).json({ error: 'Failed to save documents to database.' });
       return;
     }
 
-    res.status(200).json({
-      success: true,
-      resume: parsed.resume,
-      jd: parsed.jd,
-    });
+    // ── Return full report to frontend ────────────────────────────────────────
+    res.status(200).json({ success: true, ...report });
   }
 );
 
-// ── GET /api/upload (fetch latest parsed docs for this user) ─────────────────
+// ── GET /api/upload ───────────────────────────────────────────────────────────
 
 router.get('/', verifyToken, async (req: AuthRequest, res: Response): Promise<void> => {
   const userId = req.userId!;
 
   try {
     const result = await pool.query(
-      `SELECT parsed_resume, parsed_jd, uploaded_at
+      `SELECT parsed_resume, parsed_jd, analysis_report, uploaded_at
        FROM user_documents
        WHERE user_id = $1
        ORDER BY uploaded_at DESC
@@ -137,6 +152,7 @@ router.get('/', verifyToken, async (req: AuthRequest, res: Response): Promise<vo
     res.json({
       resume: row.parsed_resume,
       jd: row.parsed_jd,
+      ...(row.analysis_report ?? {}),
       uploadedAt: row.uploaded_at,
     });
   } catch (err) {

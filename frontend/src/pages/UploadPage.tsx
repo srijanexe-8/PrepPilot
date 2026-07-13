@@ -297,6 +297,8 @@ export default function UploadPage() {
 
     setResult(resp.data);
     setStatus('success');
+    // Navigate to the full analysis page, passing all agent data
+    navigate('/analysis', { state: { result: resp.data } });
   };
 
   const canSubmit = !!resumeFile && jdText.trim().length > 20 && status !== 'loading';
@@ -498,24 +500,23 @@ export default function UploadPage() {
 
             {/* Loading state */}
             {status === 'loading' && (
-              <div className="flex flex-col items-center gap-4 py-6">
-                <div className="relative w-14 h-14">
-                  <div className="absolute inset-0 rounded-full border-2
-                    border-violet-900/40" />
-                  <div className="absolute inset-0 rounded-full border-2
-                    border-violet-500 border-t-transparent animate-spin" />
-                  <div className="absolute inset-0 flex items-center
-                    justify-center text-violet-400">
+              <div className="flex flex-col items-center gap-5 py-8">
+                <div className="relative w-16 h-16">
+                  <div className="absolute inset-0 rounded-full border-2 border-violet-900/40" />
+                  <div className="absolute inset-0 rounded-full border-2 border-violet-500 border-t-transparent animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center text-violet-400">
                     <IconSpark />
                   </div>
                 </div>
-                <div className="text-center">
-                  <p className="text-sm font-semibold text-white">
-                    AI is reading your resume…
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    This usually takes 10–20 seconds
-                  </p>
+                <div className="text-center space-y-1">
+                  <p className="text-sm font-semibold text-white">Running multi-agent analysis…</p>
+                  <p className="text-xs text-gray-600">6 AI agents evaluating your profile in parallel</p>
+                  <div className="flex flex-wrap justify-center gap-1.5 mt-3">
+                    {['Skills', 'Experience', 'Education', 'Culture Fit', 'Questions', 'Summary'].map(a => (
+                      <span key={a} className="text-xs px-2 py-0.5 rounded-full bg-violet-900/20 border border-violet-800/30 text-violet-400 animate-pulse">{a}</span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-700 mt-2">This usually takes 20–40 seconds</p>
                 </div>
               </div>
             )}
