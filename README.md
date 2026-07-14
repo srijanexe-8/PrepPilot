@@ -113,4 +113,4 @@ PrepPilot is being built as a hackathon submission. This repository represents *
 
 ---
 
-*Built with ☕ and late nights by Srijan, Ranith & Geetesh.*
+**Built with ☕ and late nights by Srijan, Ranith & Geetesh.**
