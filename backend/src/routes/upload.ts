@@ -1,4 +1,4 @@
-﻿
+
 import { Router, Response } from 'express';
 import multer from 'multer';
 import axios from 'axios';
@@ -63,7 +63,7 @@ router.post(
       console.log('[upload] Calling Python analysis API...');
       const response = await axios.post(`${PYTHON_API}/parse`, form, {
         headers: form.getHeaders(),
-        timeout: 120_000,
+        timeout: 360_000, // 6 min — 4-wave pipeline with 10+ LLM calls on free tier
       });
       report = response.data as Record<string, unknown>;
       const rec = (report.decision as Record<string, unknown>)?.recommendation;
@@ -121,6 +121,64 @@ router.post(
       console.error('[upload] DB insert error:', dbErr);
       res.status(500).json({ error: 'Failed to save documents to database.' });
       return;
+    }
+
+    // ── Persist roadmap + questions (Wave 4 output) ────────────────────────────
+    const roadmapData = report.roadmap as {
+      days?: Array<{
+        day_number: number;
+        topic: string;
+        question_text: string;
+        learning_goal?: string;
+        difficulty?: string;
+        focus_skill?: string;
+      }>;
+      summary?: string;
+    } | undefined;
+
+    if (roadmapData?.days && Array.isArray(roadmapData.days) && roadmapData.days.length > 0) {
+      try {
+        const interviewDate = new Date();
+        interviewDate.setDate(interviewDate.getDate() + 15);
+        const interviewDateStr = interviewDate.toISOString().split('T')[0];
+
+        // Upsert roadmap row — one per user
+        const roadmapRes = await pool.query(
+          `INSERT INTO roadmaps (user_id, topics, interview_date)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (user_id) DO UPDATE
+             SET topics = EXCLUDED.topics,
+                 interview_date = EXCLUDED.interview_date,
+                 created_at = NOW()
+           RETURNING id`,
+          [userId, JSON.stringify(roadmapData.days), interviewDateStr]
+        );
+        const roadmapId = roadmapRes.rows[0].id as string;
+
+        // Delete old questions for this roadmap, then bulk-insert new ones
+        await pool.query(`DELETE FROM questions WHERE roadmap_id = $1`, [roadmapId]);
+
+        for (const day of roadmapData.days) {
+          await pool.query(
+            `INSERT INTO questions (roadmap_id, day_number, topic, question_text, learning_goal, difficulty, focus_skill)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [
+              roadmapId,
+              day.day_number,
+              day.topic,
+              day.question_text,
+              day.learning_goal ?? null,
+              day.difficulty ?? null,
+              day.focus_skill ?? null,
+            ]
+          );
+        }
+
+        console.log(`[upload] Roadmap upserted (${roadmapData.days.length} questions) for user ${userId}`);
+      } catch (roadmapErr) {
+        // Non-fatal: log and continue — analysis result is already saved
+        console.error('[upload] Roadmap DB error (non-fatal):', roadmapErr);
+      }
     }
 
     // ── Return full report to frontend ────────────────────────────────────────

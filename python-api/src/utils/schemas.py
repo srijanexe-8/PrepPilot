@@ -93,7 +93,7 @@ class CultureFitResult(BaseModel):
 class InterviewQuestions(BaseModel):
     """10 personalized interview questions targeting skill gaps."""
 
-    questions: List[str] = Field(default_factory=list)
+    questions: List[str] = Field(description="List of exactly 10 interview questions")
 
 
 class DecisionResult(BaseModel):
@@ -106,3 +106,29 @@ class DecisionResult(BaseModel):
     cons: List[str] = Field(default_factory=list)
     risks: List[str] = Field(default_factory=list)
     confidence: float = Field(ge=0.0, le=1.0)
+
+
+# ── Roadmap schemas ───────────────────────────────────────────────────────────
+
+class RoadmapDay(BaseModel):
+    """A single day in the 15-day interview preparation roadmap."""
+
+    day_number: int = Field(ge=1, le=15, description="Day in the plan, 1-indexed")
+    topic: str = Field(description="Short topic title for this day (e.g. 'System Design Basics')")
+    learning_goal: str = Field(description="One-sentence goal the candidate should achieve today")
+    question_text: str = Field(description="A self-contained interview question for today's practice")
+    difficulty: Literal["easy", "medium", "hard"] = Field(
+        description="Difficulty level — ramps from easy (days 1-5) to hard (days 13-15)"
+    )
+    focus_skill: str = Field(description="The primary skill or competency targeted today")
+
+
+class RoadmapPlan(BaseModel):
+    """A 15-day personalised interview preparation roadmap."""
+
+    days: List[RoadmapDay] = Field(
+        description="Ordered list of daily preparation items (MUST have exactly 15 entries, do not leave empty)"
+    )
+    summary: str = Field(
+        description="2-3 sentence overview of the plan, mentioning the role and key focus areas"
+    )

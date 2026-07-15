@@ -9,6 +9,7 @@ Agent pipeline (execution order):
     Wave 1 — Parallel: ResumeParser + JDParser
     Wave 2 — Parallel: SkillMatcher + ExperienceEvaluator + EducationEvaluator + CultureFit + ResumeSummarizer
     Wave 3 — Parallel: DecisionAgent + InterviewQuestionAgent (needs skill gaps)
+    Wave 4 — Sequential: RoadmapAgent (needs all prior results)
 """
 from __future__ import annotations
 
@@ -41,6 +42,7 @@ from src.agents.interview_question_agent import InterviewQuestionAgent
 from src.agents.jd_parser import JDParserAgent
 from src.agents.resume_parser import ResumeParserAgent
 from src.agents.resume_summarizer import ResumeSummarizerAgent
+from src.agents.roadmap_agent import RoadmapAgent
 from src.agents.skill_matcher import SkillMatcherAgent
 
 logging.basicConfig(level=logging.INFO)
@@ -76,16 +78,23 @@ def _run_with_retry(fn: Callable[..., T], *args: Any, max_retries: int = 2) -> T
         except Exception as exc:
             exc_str = str(exc)
             is_quota = "RESOURCE_EXHAUSTED" in exc_str or "Quota exceeded" in exc_str
-            if is_quota and attempt < max_retries:
-                # Try to parse the retry delay from the error body
-                match = re.search(r"retryDelay.*?(\d+)s", exc_str)
-                wait = int(match.group(1)) + 2 if match else 30
-                logger.warning(
-                    f"Gemini quota hit on attempt {attempt+1}. "
-                    f"Waiting {wait}s before retry…"
-                )
-                time.sleep(wait)
-                continue
+            if attempt < max_retries:
+                if is_quota:
+                    match = re.search(r"retryDelay.*?(\d+)s", exc_str)
+                    wait = int(match.group(1)) + 2 if match else 30
+                    logger.warning(
+                        f"Gemini quota hit on attempt {attempt+1}. "
+                        f"Waiting {wait}s before retry…"
+                    )
+                    time.sleep(wait)
+                    continue
+                else:
+                    logger.warning(
+                        f"Agent error on attempt {attempt+1}: {exc_str}. "
+                        "Retrying immediately..."
+                    )
+                    continue
+            logger.error(f"Agent failed after {max_retries + 1} attempts: {exc_str}")
             raise
     raise RuntimeError("Unreachable")
 
@@ -262,6 +271,17 @@ async def analyse_candidate(
     behavioral_qs = all_questions[6:8]  # questions 7-8
     cultural_qs = all_questions[8:10]   # questions 9-10
 
+    # ── Wave 4: Roadmap generation (sequential — depends on all prior results) ──
+    roadmap_agent = RoadmapAgent()
+    roadmap_result = await _run_in_thread(
+        roadmap_agent.run,
+        skill_result.missing,
+        skill_result.partial,
+        skill_result.matched,
+        resume_dict,
+        jd_dict,
+    )
+
     # ── Return full report ─────────────────────────────────────────────────────
     return {
         # Raw parsed data
@@ -296,6 +316,8 @@ async def analyse_candidate(
             "behavioral": behavioral_qs,
             "cultural": cultural_qs,
         },
+        # 15-day personalised roadmap
+        "roadmap": roadmap_result.model_dump(),
     }
 
 

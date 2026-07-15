@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import type { UploadResult } from '../api/upload';
+import { fetchAnalysis, type UploadResult } from '../api/upload';
+import { useAuth } from '../store/AuthContext';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -43,7 +44,7 @@ function ScoreRing({ score, size = 120, strokeWidth = 10 }: { score: number; siz
   return (
     <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255,255,255,0.06)" strokeWidth={strokeWidth} fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(0,0,0,0.06)" strokeWidth={strokeWidth} fill="none" />
         <circle
           cx={size / 2} cy={size / 2} r={r}
           stroke="url(#ringGrad)" strokeWidth={strokeWidth}
@@ -75,10 +76,10 @@ function ScoreBar({ label, score, max = 100 }: { label: string; score: number; m
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-400">{label}</span>
+        <span className="text-xs text-gray-500">{label}</span>
         <span className={`text-xs font-bold ${scoreTextColor((score / max) * 100)}`}>{score}/{max}</span>
       </div>
-      <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full bg-gradient-to-r ${scoreGradient((score / max) * 100)}`}
           style={{ width: `${pct}%`, transition: 'width 1s ease' }}
@@ -92,9 +93,9 @@ function ScoreBar({ label, score, max = 100 }: { label: string; score: number; m
 
 function Pill({ label, variant }: { label: string; variant: 'matched' | 'missing' | 'partial' }) {
   const styles = {
-    matched: 'bg-emerald-900/30 border-emerald-700/40 text-emerald-300',
-    missing: 'bg-red-900/30 border-red-700/40 text-red-300',
-    partial: 'bg-amber-900/25 border-amber-700/35 text-amber-300',
+    matched: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+    missing: 'bg-rose-50 border-rose-200 text-rose-700',
+    partial: 'bg-amber-50 border-amber-200 text-amber-700',
   };
   const icons = { matched: '✓', missing: '✕', partial: '~' };
   return (
@@ -110,11 +111,11 @@ function Pill({ label, variant }: { label: string; variant: 'matched' | 'missing
 function SectionHeader({ icon, title, subtitle }: { icon: string; title: string; subtitle?: string }) {
   return (
     <div className="flex items-center gap-3 mb-5">
-      <div className="w-9 h-9 rounded-xl bg-violet-900/30 border border-violet-800/40 flex items-center justify-center text-lg">
+      <div className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-lg shadow-sm">
         {icon}
       </div>
       <div>
-        <h2 className="font-bold text-white text-base">{title}</h2>
+        <h2 className="font-bold text-gray-900 text-base">{title}</h2>
         {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
       </div>
     </div>
@@ -125,7 +126,7 @@ function SectionHeader({ icon, title, subtitle }: { icon: string; title: string;
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-6 ${className}`}>
+    <div className={`rounded-2xl border border-gray-200 bg-white shadow-sm p-6 ${className}`}>
       {children}
     </div>
   );
@@ -154,20 +155,50 @@ function CopyBtn({ text }: { text: string }) {
 // ── Main Analysis Page ─────────────────────────────────────────────────────────
 
 export default function AnalysisPage() {
+  const { token } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const data = location.state?.result as UploadResult | undefined;
+
+  const [data, setData] = useState<UploadResult | undefined>(location.state?.result);
+  const [loading, setLoading] = useState(!data);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [activeTab, setActiveTab] = useState<'technical' | 'behavioral' | 'cultural'>('technical');
   const [reportExpanded, setReportExpanded] = useState(false);
 
+  useEffect(() => {
+    if (data || !token) return;
+
+    fetchAnalysis(token).then(res => {
+      setLoading(false);
+      if (res.status === 404) {
+        setErrorMsg('No analysis data found. Please upload a resume first.');
+      } else if (res.data) {
+        setData(res.data);
+      } else {
+        setErrorMsg(res.error || 'Failed to load analysis.');
+      }
+    });
+  }, [token, data]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center bg-transparent">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-500 text-sm">Loading your analysis...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!data) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gray-950">
-        <p className="text-gray-400 text-sm">No analysis data found. Please upload a resume first.</p>
+      <div className="min-h-[80vh] flex flex-col items-center justify-center gap-4 bg-transparent">
+        <p className="text-gray-500 text-sm">{errorMsg || 'No analysis data found. Please upload a resume first.'}</p>
         <button
           onClick={() => navigate('/upload')}
-          className="px-4 py-2 rounded-xl bg-violet-700 hover:bg-violet-600 text-white text-sm transition-colors"
+          className="px-4 py-2 rounded-xl bg-violet-50 hover:bg-violet-100 border border-violet-200 text-violet-700 text-sm font-semibold transition-all"
         >
           Go to Upload
         </button>
@@ -187,45 +218,12 @@ export default function AnalysisPage() {
   const cultQuestions = iq?.cultural ?? [];
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      {/* ── Gradient background ── */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-900/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-900/15 rounded-full blur-3xl" />
-      </div>
-
-      {/* ── Nav ── */}
-      <nav className="sticky top-0 z-20 border-b border-white/[0.06] bg-gray-950/80 backdrop-blur-md px-6 py-3.5">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/upload')}
-              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
-                strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-              Upload
-            </button>
-            <span className="text-gray-700">/</span>
-            <span className="text-sm text-white font-medium">Hiring Analysis</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">P</span>
-            </div>
-            <span className="font-bold text-white text-sm tracking-tight">PrepPilot</span>
-          </div>
-        </div>
-      </nav>
-
-      <main className="relative max-w-5xl mx-auto px-6 py-10 space-y-6">
-
-        {/* ── HERO BAND ────────────────────────────────────────────────────────── */}
-        <div className="rounded-2xl border border-white/[0.07] bg-gradient-to-br from-gray-900/80 to-gray-950/80 backdrop-blur-sm p-8 overflow-hidden relative">
+    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500 pb-16 text-gray-900">
+      
+      {/* ── HERO BAND ────────────────────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-8 overflow-hidden relative">
           {/* decorative glow */}
-          <div className={`absolute -right-20 -top-20 w-64 h-64 rounded-full blur-3xl opacity-20 ${
+          <div className={`absolute -right-20 -top-20 w-64 h-64 rounded-full blur-3xl opacity-10 ${
             rec === 'Strong Hire' ? 'bg-emerald-500' :
             rec === 'Hire' ? 'bg-green-500' :
             rec === 'Maybe' ? 'bg-amber-500' : 'bg-red-500'
@@ -235,16 +233,16 @@ export default function AnalysisPage() {
             {/* Score ring */}
             <div className="shrink-0">
               <ScoreRing score={overallScore} size={130} strokeWidth={11} />
-              <p className="text-center text-xs text-gray-600 mt-1">Overall Score</p>
+              <p className="text-center text-xs text-gray-500 mt-1">Overall Score</p>
             </div>
 
             {/* Info */}
             <div className="flex-1 space-y-3">
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Hiring Analysis Report</p>
-                <h1 className="text-2xl font-black text-white">{resume.name || 'Candidate'}</h1>
-                <p className="text-gray-400 text-sm mt-0.5">
-                  Applying for <span className="text-violet-300 font-semibold">{jd.role_title || 'Unknown Role'}</span>
+                <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Hiring Analysis Report</p>
+                <h1 className="text-2xl font-black text-gray-900">{resume.name || 'Candidate'}</h1>
+                <p className="text-gray-600 text-sm mt-0.5">
+                  Applying for <span className="text-emerald-600 font-semibold">{jd.role_title || 'Unknown Role'}</span>
                 </p>
               </div>
 
@@ -255,7 +253,7 @@ export default function AnalysisPage() {
               </div>
 
               {decision?.reasoning && (
-                <p className="text-sm text-gray-400 leading-relaxed max-w-xl">
+                <p className="text-sm text-gray-600 leading-relaxed max-w-xl">
                   {decision.reasoning}
                 </p>
               )}
@@ -264,8 +262,8 @@ export default function AnalysisPage() {
             {/* Confidence */}
             {decision?.confidence !== undefined && (
               <div className="shrink-0 text-center">
-                <div className="text-3xl font-black text-violet-400">{decision.confidence}%</div>
-                <div className="text-xs text-gray-600">Confidence</div>
+                <div className="text-3xl font-black text-emerald-500">{decision.confidence}%</div>
+                <div className="text-xs text-gray-400">Confidence</div>
               </div>
             )}
           </div>
@@ -330,8 +328,8 @@ export default function AnalysisPage() {
               )}
 
               {skills.reasoning && (
-                <div className="mt-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                  <p className="text-xs text-gray-400 leading-relaxed">{skills.reasoning}</p>
+                <div className="mt-4 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                  <p className="text-xs text-gray-600 leading-relaxed">{skills.reasoning}</p>
                 </div>
               )}
             </Card>
@@ -348,10 +346,10 @@ export default function AnalysisPage() {
                   <ul className="space-y-2">
                     {experience.strengths.map((s, i) => (
                       <li key={i} className="flex items-start gap-2.5">
-                        <span className="mt-0.5 w-5 h-5 rounded-full bg-emerald-900/30 border border-emerald-700/40 flex items-center justify-center shrink-0">
-                          <span className="text-emerald-400 text-xs">✓</span>
+                        <span className="mt-0.5 w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
+                          <span className="text-emerald-500 text-xs">✓</span>
                         </span>
-                        <span className="text-sm text-gray-300">{s}</span>
+                        <span className="text-sm text-gray-700">{s}</span>
                       </li>
                     ))}
                   </ul>
@@ -364,10 +362,10 @@ export default function AnalysisPage() {
                   <ul className="space-y-2">
                     {experience.weaknesses.map((w, i) => (
                       <li key={i} className="flex items-start gap-2.5">
-                        <span className="mt-0.5 w-5 h-5 rounded-full bg-red-900/30 border border-red-700/40 flex items-center justify-center shrink-0">
-                          <span className="text-red-400 text-xs">✕</span>
+                        <span className="mt-0.5 w-5 h-5 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center shrink-0">
+                          <span className="text-rose-500 text-xs">✕</span>
                         </span>
-                        <span className="text-sm text-gray-300">{w}</span>
+                        <span className="text-sm text-gray-700">{w}</span>
                       </li>
                     ))}
                   </ul>
@@ -375,8 +373,8 @@ export default function AnalysisPage() {
               )}
 
               {experience.reasoning && (
-                <div className="mt-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                  <p className="text-xs text-gray-400 leading-relaxed">{experience.reasoning}</p>
+                <div className="mt-4 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                  <p className="text-xs text-gray-600 leading-relaxed">{experience.reasoning}</p>
                 </div>
               )}
             </Card>
@@ -397,15 +395,15 @@ export default function AnalysisPage() {
               </div>
               <div className="space-y-4">
                 {culture.reasoning && (
-                  <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                    <p className="text-xs font-semibold text-violet-400 uppercase tracking-widest mb-2">Assessment</p>
-                    <p className="text-sm text-gray-300 leading-relaxed">{culture.reasoning}</p>
+                  <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <p className="text-xs font-semibold text-emerald-600 uppercase tracking-widest mb-2">Assessment</p>
+                    <p className="text-sm text-gray-700 leading-relaxed">{culture.reasoning}</p>
                   </div>
                 )}
                 {culture.uncertainty_notes && (
-                  <div className="p-4 rounded-xl bg-amber-900/10 border border-amber-800/30">
-                    <p className="text-xs font-semibold text-amber-500 uppercase tracking-widest mb-2">⚠ Uncertainty</p>
-                    <p className="text-xs text-amber-300/70 leading-relaxed">{culture.uncertainty_notes}</p>
+                  <div className="p-4 rounded-xl bg-amber-50 border border-amber-200">
+                    <p className="text-xs font-semibold text-amber-600 uppercase tracking-widest mb-2">⚠ Uncertainty</p>
+                    <p className="text-xs text-amber-700 leading-relaxed">{culture.uncertainty_notes}</p>
                   </div>
                 )}
               </div>
@@ -418,17 +416,17 @@ export default function AnalysisPage() {
           <Card>
             <SectionHeader icon="💼" title="Experience Timeline" subtitle={`${resume.experience.length} position${resume.experience.length > 1 ? 's' : ''}`} />
             <div className="relative">
-              <div className="absolute left-3.5 top-2 bottom-2 w-px bg-gradient-to-b from-violet-500/40 via-indigo-500/20 to-transparent" />
+              <div className="absolute left-3.5 top-2 bottom-2 w-px bg-gray-200" />
               <div className="space-y-6 pl-10">
                 {resume.experience.map((exp, i) => (
                   <div key={i} className="relative">
-                    <div className="absolute -left-[34px] top-0.5 w-4 h-4 rounded-full border-2 border-violet-500/60 bg-violet-900/40" />
+                    <div className="absolute -left-[34px] top-0.5 w-4 h-4 rounded-full border-2 border-white bg-gray-300" />
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-1">
                       <div>
-                        <p className="font-semibold text-white text-sm">{exp.role}</p>
-                        <p className="text-violet-300/80 text-xs">{exp.company}</p>
+                        <p className="font-semibold text-gray-900 text-sm">{exp.role}</p>
+                        <p className="text-gray-500 text-xs">{exp.company}</p>
                       </div>
-                      <span className="shrink-0 text-xs text-gray-600 bg-white/5 px-2.5 py-1 rounded-lg border border-white/[0.06]">
+                      <span className="shrink-0 text-xs text-gray-500 bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200">
                         {exp.duration}
                       </span>
                     </div>
@@ -436,7 +434,7 @@ export default function AnalysisPage() {
                       <ul className="mt-2 space-y-1">
                         {exp.responsibilities.slice(0, 3).map((r, j) => (
                           <li key={j} className="flex items-start gap-2 text-xs text-gray-500">
-                            <span className="mt-1 w-1 h-1 rounded-full bg-gray-600 shrink-0" />
+                            <span className="mt-1 w-1 h-1 rounded-full bg-gray-400 shrink-0" />
                             {r}
                           </li>
                         ))}
@@ -445,7 +443,7 @@ export default function AnalysisPage() {
                     {exp.achievements?.length > 0 && (
                       <ul className="mt-1 space-y-1">
                         {exp.achievements.slice(0, 2).map((a, j) => (
-                          <li key={j} className="flex items-start gap-2 text-xs text-emerald-400/70">
+                          <li key={j} className="flex items-start gap-2 text-xs text-emerald-700">
                             <span className="mt-0.5 text-emerald-500">🏆</span>
                             {a}
                           </li>
@@ -467,11 +465,11 @@ export default function AnalysisPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 {resume.education.map((edu, i) => (
-                  <div key={i} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                    <p className="font-semibold text-white text-sm">{edu.degree}</p>
-                    <p className="text-xs text-violet-300/80">{edu.branch}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{edu.institution} · {edu.year}</p>
-                    {edu.gpa && <p className="text-xs text-gray-600 mt-0.5">GPA: {edu.gpa}</p>}
+                  <div key={i} className="p-3 rounded-xl bg-gray-50 border border-gray-100">
+                    <p className="font-semibold text-gray-900 text-sm">{edu.degree}</p>
+                    <p className="text-xs text-gray-500">{edu.branch}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{edu.institution} · {edu.year}</p>
+                    {edu.gpa && <p className="text-xs text-gray-500 mt-0.5">GPA: {edu.gpa}</p>}
                   </div>
                 ))}
                 {resume.certifications?.length > 0 && (
@@ -479,20 +477,20 @@ export default function AnalysisPage() {
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Certifications</p>
                     <div className="flex flex-wrap gap-1.5">
                       {resume.certifications.map(c => (
-                        <span key={c} className="text-xs px-2.5 py-1 rounded-lg bg-indigo-900/25 border border-indigo-800/35 text-indigo-300">{c}</span>
+                        <span key={c} className="text-xs px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700">{c}</span>
                       ))}
                     </div>
                   </div>
                 )}
               </div>
               {education?.reasoning && (
-                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Assessment</p>
-                  <p className="text-sm text-gray-300 leading-relaxed">{education.reasoning}</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{education.reasoning}</p>
                   <div className={`mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold border ${
                     education.meets_requirement
-                      ? 'bg-emerald-900/20 border-emerald-700/40 text-emerald-400'
-                      : 'bg-red-900/20 border-red-700/40 text-red-400'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                      : 'bg-rose-50 border-rose-200 text-rose-700'
                   }`}>
                     {education.meets_requirement ? '✓ Meets Requirement' : '✕ Does Not Meet Requirement'}
                   </div>
@@ -507,7 +505,7 @@ export default function AnalysisPage() {
           <Card>
             <SectionHeader icon="💬" title="Interview Questions" subtitle="Tailored to this candidate & role" />
             {/* Tabs */}
-            <div className="flex gap-1 mb-5 p-1 bg-white/[0.04] rounded-xl">
+            <div className="flex gap-1 mb-5 p-1 bg-gray-100 rounded-xl">
               {([
                 { key: 'technical', label: `Technical (${techQuestions.length})` },
                 { key: 'behavioral', label: `Behavioural (${behavQuestions.length})` },
@@ -518,8 +516,8 @@ export default function AnalysisPage() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
                     activeTab === tab.key
-                      ? 'bg-violet-700 text-white shadow-lg'
-                      : 'text-gray-500 hover:text-gray-300'
+                      ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+                      : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
                   {tab.label}
@@ -531,11 +529,11 @@ export default function AnalysisPage() {
               {(activeTab === 'technical' ? techQuestions :
                 activeTab === 'behavioral' ? behavQuestions : cultQuestions
               ).map((q, i) => (
-                <div key={i} className="flex items-start gap-3 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:border-violet-800/40 transition-colors group">
-                  <span className="shrink-0 w-6 h-6 rounded-full bg-violet-900/30 border border-violet-800/40 flex items-center justify-center text-violet-400 text-xs font-bold mt-0.5">
+                <div key={i} className="flex items-start gap-3 p-3.5 rounded-xl bg-gray-50 border border-gray-200 hover:border-violet-300 transition-colors group">
+                  <span className="shrink-0 w-6 h-6 rounded-full bg-violet-50 border border-violet-200 flex items-center justify-center text-violet-600 text-xs font-bold mt-0.5">
                     {i + 1}
                   </span>
-                  <p className="text-sm text-gray-300 leading-relaxed flex-1">{q}</p>
+                  <p className="text-sm text-gray-700 leading-relaxed flex-1">{q}</p>
                   <CopyBtn text={q} />
                 </div>
               ))}
@@ -545,9 +543,9 @@ export default function AnalysisPage() {
 
         {/* ── NARRATIVE SUMMARY ─────────────────────────────────────────────────── */}
         {narrative_summary && (
-          <div className="rounded-2xl border border-violet-800/30 bg-gradient-to-br from-violet-900/20 to-indigo-900/10 p-6">
+          <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-indigo-50 p-6">
             <SectionHeader icon="📝" title="Executive Summary" subtitle="AI-generated narrative for the hiring committee" />
-            <blockquote className="text-gray-300 text-sm leading-loose italic border-l-2 border-violet-500/40 pl-4">
+            <blockquote className="text-gray-700 text-sm leading-loose italic border-l-2 border-violet-500/40 pl-4">
               {narrative_summary}
             </blockquote>
           </div>
@@ -558,11 +556,11 @@ export default function AnalysisPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {decision.pros?.length > 0 && (
               <Card>
-                <p className="text-xs font-semibold text-emerald-500 uppercase tracking-widest mb-3">✓ Pros</p>
+                <p className="text-xs font-semibold text-emerald-600 uppercase tracking-widest mb-3">✓ Pros</p>
                 <ul className="space-y-2">
                   {decision.pros.map((p, i) => (
-                    <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
-                      <span className="text-emerald-400 mt-0.5">+</span>{p}
+                    <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                      <span className="text-emerald-500 mt-0.5">+</span>{p}
                     </li>
                   ))}
                 </ul>
@@ -570,11 +568,11 @@ export default function AnalysisPage() {
             )}
             {decision.cons?.length > 0 && (
               <Card>
-                <p className="text-xs font-semibold text-red-500 uppercase tracking-widest mb-3">✕ Cons</p>
+                <p className="text-xs font-semibold text-rose-500 uppercase tracking-widest mb-3">✕ Cons</p>
                 <ul className="space-y-2">
                   {decision.cons.map((c, i) => (
-                    <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
-                      <span className="text-red-400 mt-0.5">−</span>{c}
+                    <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                      <span className="text-rose-500 mt-0.5">−</span>{c}
                     </li>
                   ))}
                 </ul>
@@ -585,8 +583,8 @@ export default function AnalysisPage() {
                 <p className="text-xs font-semibold text-amber-500 uppercase tracking-widest mb-3">⚠ Risks</p>
                 <ul className="space-y-2">
                   {decision.risks.map((r, i) => (
-                    <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
-                      <span className="text-amber-400 mt-0.5">!</span>{r}
+                    <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                      <span className="text-amber-500 mt-0.5">!</span>{r}
                     </li>
                   ))}
                 </ul>
@@ -596,35 +594,35 @@ export default function AnalysisPage() {
         )}
 
         {/* ── FINAL RECRUITER REPORT ───────────────────────────────────────────── */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
+        <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
           <button
             onClick={() => setReportExpanded(!reportExpanded)}
-            className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-colors"
+            className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center gap-3">
               <span className="text-lg">📋</span>
               <div className="text-left">
-                <p className="font-bold text-white text-sm">Final Recruiter Report</p>
-                <p className="text-xs text-gray-600">Full structured evaluation — print-ready</p>
+                <p className="font-bold text-gray-900 text-sm">Final Recruiter Report</p>
+                <p className="text-xs text-gray-500">Full structured evaluation — print-ready</p>
               </div>
             </div>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
               strokeLinecap="round" strokeLinejoin="round"
-              className={`w-4 h-4 text-gray-500 transition-transform ${reportExpanded ? 'rotate-180' : ''}`}>
+              className={`w-4 h-4 text-gray-400 transition-transform ${reportExpanded ? 'rotate-180' : ''}`}>
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
 
           {reportExpanded && (
-            <div className="px-6 pb-6 border-t border-white/[0.05] pt-6 space-y-5">
+            <div className="px-6 pb-6 border-t border-gray-100 pt-6 space-y-5">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div><span className="text-gray-600">Candidate</span><p className="text-white font-semibold">{resume.name}</p></div>
-                <div><span className="text-gray-600">Role</span><p className="text-white font-semibold">{jd.role_title}</p></div>
-                <div><span className="text-gray-600">Recommendation</span><p className={`font-bold ${recColors.text}`}>{rec}</p></div>
-                <div><span className="text-gray-600">Overall Score</span><p className={`font-bold ${scoreTextColor(overallScore)}`}>{overallScore}/100</p></div>
+                <div><span className="text-gray-500">Candidate</span><p className="text-gray-900 font-semibold">{resume.name}</p></div>
+                <div><span className="text-gray-500">Role</span><p className="text-gray-900 font-semibold">{jd.role_title}</p></div>
+                <div><span className="text-gray-500">Recommendation</span><p className={`font-bold ${recColors.text}`}>{rec}</p></div>
+                <div><span className="text-gray-500">Overall Score</span><p className={`font-bold ${scoreTextColor(overallScore)}`}>{overallScore}/100</p></div>
               </div>
 
-              <hr className="border-white/[0.05]" />
+              <hr className="border-gray-100" />
 
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Score Breakdown</p>
@@ -635,9 +633,9 @@ export default function AnalysisPage() {
                     { l: 'Culture (20%)', s: culture?.overall_score ?? 0 },
                     { l: 'Education (10%)', s: education?.score ?? 0 },
                   ].map(item => (
-                    <div key={item.l} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                    <div key={item.l} className="p-3 rounded-xl bg-gray-50 border border-gray-100">
                       <p className={`text-lg font-black ${scoreTextColor(item.s)}`}>{item.s}</p>
-                      <p className="text-xs text-gray-600">{item.l}</p>
+                      <p className="text-xs text-gray-500">{item.l}</p>
                     </div>
                   ))}
                 </div>
@@ -646,35 +644,35 @@ export default function AnalysisPage() {
               {narrative_summary && (
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Executive Summary</p>
-                  <p className="text-sm text-gray-300 leading-relaxed">{narrative_summary}</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{narrative_summary}</p>
                 </div>
               )}
 
               {decision?.reasoning && (
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Decision Reasoning</p>
-                  <p className="text-sm text-gray-300 leading-relaxed">{decision.reasoning}</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{decision.reasoning}</p>
                 </div>
               )}
 
               {skills?.reasoning && (
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Skills Assessment</p>
-                  <p className="text-sm text-gray-300 leading-relaxed">{skills.reasoning}</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{skills.reasoning}</p>
                 </div>
               )}
 
               {experience?.reasoning && (
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Experience Assessment</p>
-                  <p className="text-sm text-gray-300 leading-relaxed">{experience.reasoning}</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{experience.reasoning}</p>
                 </div>
               )}
 
               <div className="pt-2">
                 <button
                   onClick={() => window.print()}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-700/20 hover:bg-violet-700/40 border border-violet-600/30 text-violet-300 text-sm font-semibold transition-all"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-50 hover:bg-violet-100 border border-violet-200 text-violet-700 text-sm font-semibold transition-all"
                 >
                   🖨️ Print Report
                 </button>
@@ -687,23 +685,17 @@ export default function AnalysisPage() {
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <button
             onClick={() => navigate('/upload')}
-            className="flex-1 py-3.5 rounded-2xl border border-white/10 text-gray-400 hover:text-white hover:border-white/20 text-sm font-semibold transition-all"
+            className="flex-1 py-3.5 rounded-2xl border border-gray-200 bg-white text-gray-600 hover:text-gray-900 hover:border-gray-300 text-sm font-semibold transition-all shadow-sm"
           >
             ← Analyse Another Resume
           </button>
           <button
-            onClick={() => navigate('/dashboard')}
-            className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-semibold shadow-lg shadow-violet-900/30 hover:brightness-110 transition-all"
+            onClick={() => navigate('/roadmap')}
+            className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-semibold shadow-md shadow-emerald-500/20 hover:brightness-110 transition-all"
           >
-            Go to Dashboard →
+            View Your Roadmap →
           </button>
         </div>
-
-      </main>
-
-      <footer className="border-t border-white/[0.05] py-4 text-center text-xs text-gray-700 mt-6">
-        PrepPilot · AI interview coaching · {new Date().getFullYear()}
-      </footer>
-    </div>
+      </div>
   );
 }
