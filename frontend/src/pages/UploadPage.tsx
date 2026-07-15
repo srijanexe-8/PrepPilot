@@ -86,8 +86,8 @@ function formatBytes(bytes: number): string {
 
 function SkillPill({ skill }: { skill: string }) {
   return (
-    <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-violet-900/30
-      border border-violet-700/30 text-violet-300 text-xs font-medium">
+    <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-50
+      border border-emerald-200 text-emerald-700 text-xs font-medium">
       {skill}
     </span>
   );
@@ -105,14 +105,14 @@ function ResultCard({ result }: { result: UploadResult }) {
     <div className="space-y-4 animate-[fadeIn_0.4s_ease]">
       {/* Success banner */}
       <div className="flex items-center gap-3 px-5 py-4 rounded-2xl
-        bg-green-900/20 border border-green-800/40">
-        <div className="w-8 h-8 rounded-full bg-green-900/40 border border-green-700/40
-          flex items-center justify-center text-green-400 shrink-0">
+        bg-emerald-50 border border-emerald-200 shadow-sm">
+        <div className="w-8 h-8 rounded-full bg-emerald-100 border border-emerald-200
+          flex items-center justify-center text-emerald-600 shrink-0">
           <IconCheck />
         </div>
         <div>
-          <p className="font-semibold text-white text-sm">Profile analysed successfully</p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="font-semibold text-gray-900 text-sm">Profile analysed successfully</p>
+          <p className="text-xs text-gray-600 mt-0.5">
             Your resume and job description have been parsed and saved.
           </p>
         </div>
@@ -121,15 +121,15 @@ function ResultCard({ result }: { result: UploadResult }) {
       {/* Two-column result summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Resume card */}
-        <div className="card p-5 space-y-4">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-violet-900/30 border border-violet-800/40
-              flex items-center justify-center text-violet-400">
+            <div className="w-9 h-9 rounded-xl bg-violet-50 border border-violet-200
+              flex items-center justify-center text-violet-600">
               <IconFile />
             </div>
             <div>
               <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Resume</p>
-              <p className="font-semibold text-white text-sm">{resume.name || 'Candidate'}</p>
+              <p className="font-semibold text-gray-900 text-sm">{resume.name || 'Candidate'}</p>
             </div>
           </div>
 
@@ -139,8 +139,8 @@ function ResultCard({ result }: { result: UploadResult }) {
               { label: 'Jobs', value: resume.experience.length },
               { label: 'Projects', value: resume.projects.length },
             ].map(s => (
-              <div key={s.label} className="bg-gray-800/50 rounded-xl py-3">
-                <p className="text-xl font-bold text-white">{s.value}</p>
+              <div key={s.label} className="bg-gray-50 rounded-xl py-3 border border-gray-100">
+                <p className="text-xl font-bold text-gray-900">{s.value}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
               </div>
             ))}
@@ -152,7 +152,7 @@ function ResultCard({ result }: { result: UploadResult }) {
               <div className="flex flex-wrap gap-1.5">
                 {topSkills.map(s => <SkillPill key={s} skill={s} />)}
                 {resume.skills.length > 10 && (
-                  <span className="text-xs text-gray-600 self-center">
+                  <span className="text-xs text-gray-500 self-center font-medium ml-1">
                     +{resume.skills.length - 10} more
                   </span>
                 )}
@@ -162,15 +162,15 @@ function ResultCard({ result }: { result: UploadResult }) {
         </div>
 
         {/* JD card */}
-        <div className="card p-5 space-y-4">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-900/30 border border-indigo-800/40
-              flex items-center justify-center text-indigo-400">
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200
+              flex items-center justify-center text-indigo-600">
               <IconBriefcase />
             </div>
             <div>
               <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Target Role</p>
-              <p className="font-semibold text-white text-sm leading-tight">
+              <p className="font-semibold text-gray-900 text-sm leading-tight">
                 {jd.role_title || 'Role'}
               </p>
             </div>
@@ -181,8 +181,8 @@ function ResultCard({ result }: { result: UploadResult }) {
               { label: 'Required Skills', value: jd.required_skills.length },
               { label: 'Skills Matched', value: matchedSkills.length },
             ].map(s => (
-              <div key={s.label} className="bg-gray-800/50 rounded-xl py-3">
-                <p className="text-xl font-bold text-white">{s.value}</p>
+              <div key={s.label} className="bg-gray-50 rounded-xl py-3 border border-gray-100">
+                <p className="text-xl font-bold text-gray-900">{s.value}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
               </div>
             ))}
@@ -196,8 +196,8 @@ function ResultCard({ result }: { result: UploadResult }) {
                   <span key={s}
                     className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium border
                       ${matchedSkills.map(m => m.toLowerCase()).includes(s.toLowerCase())
-                        ? 'bg-green-900/20 border-green-700/30 text-green-400'
-                        : 'bg-gray-800/60 border-gray-700/40 text-gray-500'
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                        : 'bg-gray-50 border-gray-200 text-gray-600'
                       }`}>
                     {s}
                   </span>
@@ -210,17 +210,17 @@ function ResultCard({ result }: { result: UploadResult }) {
 
       {/* Experience summary */}
       {resume.experience.length > 0 && (
-        <div className="card p-5">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
           <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-3">Experience</p>
           <div className="space-y-2">
             {resume.experience.slice(0, 3).map((exp, i) => (
               <div key={i} className="flex items-center justify-between py-2
-                border-b border-gray-800/60 last:border-0">
+                border-b border-gray-100 last:border-0">
                 <div>
-                  <p className="text-sm font-medium text-white">{exp.role}</p>
+                  <p className="text-sm font-semibold text-gray-900">{exp.role}</p>
                   <p className="text-xs text-gray-500">{exp.company}</p>
                 </div>
-                <span className="text-xs text-gray-600 bg-gray-800/60 px-2.5 py-1 rounded-lg">
+                <span className="text-xs text-gray-500 font-medium bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-lg">
                   {exp.duration}
                 </span>
               </div>
@@ -233,12 +233,12 @@ function ResultCard({ result }: { result: UploadResult }) {
       <button
         disabled
         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl
-          bg-gray-800/60 border border-gray-700/40 text-gray-600
+          bg-gray-100 border border-gray-200 text-gray-400
           text-sm font-semibold cursor-not-allowed"
         title="Coming in the next milestone"
       >
         Continue to Your Roadmap →
-        <span className="text-xs font-normal ml-1 text-gray-700">(Coming soon)</span>
+        <span className="text-xs font-normal ml-1 text-gray-500">(Coming soon)</span>
       </button>
     </div>
   );
@@ -304,49 +304,17 @@ export default function UploadPage() {
   const canSubmit = !!resumeFile && jdText.trim().length > 20 && status !== 'loading';
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* ── Nav ───────────────────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-10 border-b border-gray-800/70
-        bg-gray-950/80 backdrop-blur-md px-6 py-3.5">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-1.5 text-sm text-gray-500
-                hover:text-gray-300 transition-colors"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-                className="w-4 h-4">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-              Dashboard
-            </button>
-            <span className="text-gray-700">/</span>
-            <span className="text-sm text-white font-medium">Upload Documents</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-violet-500
-              to-indigo-600 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">P</span>
-            </div>
-            <span className="font-bold text-white text-sm tracking-tight">PrepPilot</span>
-          </div>
-        </div>
-      </nav>
-
-      {/* ── Main ──────────────────────────────────────────────────────────── */}
-      <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-10 space-y-8">
+    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-16 text-gray-900">
 
         {/* Header */}
         <div>
           <div className="inline-flex items-center gap-2 text-xs font-semibold
-            text-violet-400 uppercase tracking-widest mb-3
-            bg-violet-900/20 border border-violet-800/30 px-3 py-1.5 rounded-full">
+            text-violet-600 uppercase tracking-widest mb-3
+            bg-violet-50 border border-violet-200 px-3 py-1.5 rounded-full">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
             Step 2 of 4
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Upload Your Documents</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Upload Your Documents</h1>
           <p className="text-gray-500 text-sm leading-relaxed max-w-lg">
             Drop in your resume and paste the job description.
             Our AI will extract your skills and identify exactly what to work on.
@@ -363,25 +331,24 @@ export default function UploadPage() {
 
               {/* ── Left: Resume Drop Zone ─────────────────────────────── */}
               <div className="flex flex-col gap-3">
-                <label className="text-sm font-semibold text-white flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-md bg-violet-900/40 border
-                    border-violet-800/50 flex items-center justify-center
-                    text-violet-400 text-xs font-bold">1</span>
+                <label className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-md bg-violet-100 border
+                    border-violet-200 flex items-center justify-center
+                    text-violet-700 text-xs font-bold">1</span>
                   Resume
-                  <span className="text-xs font-normal text-gray-600">PDF or DOCX · max 10 MB</span>
+                  <span className="text-xs font-normal text-gray-500">PDF or DOCX · max 10 MB</span>
                 </label>
 
                 {resumeFile ? (
                   /* Selected file display */
-                  <div className="card p-5 flex items-center gap-4 border-violet-800/40
-                    bg-violet-900/10">
-                    <div className="w-10 h-10 rounded-xl bg-violet-900/40
-                      border border-violet-800/50 flex items-center
-                      justify-center text-violet-400 shrink-0">
+                  <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-violet-50
+                      border border-violet-200 flex items-center
+                      justify-center text-violet-600 shrink-0">
                       <IconFile />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
                         {resumeFile.name}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5">
@@ -390,10 +357,10 @@ export default function UploadPage() {
                     </div>
                     <button
                       onClick={() => setResumeFile(null)}
-                      className="w-7 h-7 rounded-lg bg-gray-800 hover:bg-red-900/40
-                        border border-gray-700 hover:border-red-800/50
+                      className="w-7 h-7 rounded-lg bg-gray-50 hover:bg-rose-50
+                        border border-gray-200 hover:border-rose-200
                         flex items-center justify-center text-gray-500
-                        hover:text-red-400 transition-all shrink-0"
+                        hover:text-rose-500 transition-all shrink-0"
                     >
                       <IconX />
                     </button>
@@ -402,11 +369,11 @@ export default function UploadPage() {
                   /* Drop zone */
                   <div
                     id="resume-drop-zone"
-                    className={`card flex flex-col items-center justify-center
-                      gap-4 py-12 px-6 cursor-pointer transition-all duration-300
+                    className={`bg-white rounded-2xl border flex flex-col items-center justify-center
+                      gap-4 py-12 px-6 cursor-pointer transition-all duration-300 shadow-sm
                       ${isDragging
-                        ? 'border-violet-500/60 bg-violet-900/15 shadow-[0_0_30px_-8px_rgba(139,92,246,0.3)]'
-                        : 'border-gray-700/60 hover:border-violet-700/50 hover:bg-violet-900/5'
+                        ? 'border-violet-400 bg-violet-50'
+                        : 'border-gray-200 hover:border-violet-300 hover:bg-gray-50 border-dashed'
                       }`}
                     onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
                     onDragLeave={() => setIsDragging(false)}
@@ -416,18 +383,18 @@ export default function UploadPage() {
                     <div className={`w-14 h-14 rounded-2xl flex items-center
                       justify-center transition-colors duration-300
                       ${isDragging
-                        ? 'bg-violet-800/40 border border-violet-700/50 text-violet-300'
-                        : 'bg-gray-800/60 border border-gray-700/60 text-gray-500'
+                        ? 'bg-violet-100 border border-violet-200 text-violet-600'
+                        : 'bg-gray-100 border border-gray-200 text-gray-400'
                       }`}>
                       <IconUpload />
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-medium text-gray-300">
+                      <p className="text-sm font-semibold text-gray-900">
                         {isDragging ? 'Drop your resume here' : 'Drag & drop your resume'}
                       </p>
-                      <p className="text-xs text-gray-600 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         or{' '}
-                        <span className="text-violet-400 hover:text-violet-300
+                        <span className="text-violet-600 hover:text-violet-700
                           transition-colors font-medium">
                           click to browse
                         </span>
@@ -453,13 +420,13 @@ export default function UploadPage() {
               <div className="flex flex-col gap-3">
                 <label
                   htmlFor="jd-textarea"
-                  className="text-sm font-semibold text-white flex items-center gap-2"
+                  className="text-sm font-semibold text-gray-900 flex items-center gap-2"
                 >
-                  <span className="w-5 h-5 rounded-md bg-indigo-900/40 border
-                    border-indigo-800/50 flex items-center justify-center
-                    text-indigo-400 text-xs font-bold">2</span>
+                  <span className="w-5 h-5 rounded-md bg-indigo-100 border
+                    border-indigo-200 flex items-center justify-center
+                    text-indigo-700 text-xs font-bold">2</span>
                   Job Description
-                  <span className="text-xs font-normal text-gray-600">paste the full JD</span>
+                  <span className="text-xs font-normal text-gray-500">paste the full JD</span>
                 </label>
 
                 <textarea
@@ -468,15 +435,15 @@ export default function UploadPage() {
                   onChange={e => setJdText(e.target.value)}
                   placeholder="Paste the full job description here…&#10;&#10;Include the role title, responsibilities, required skills, and any other details."
                   className="flex-1 min-h-[240px] w-full px-4 py-3.5 rounded-2xl
-                    bg-gray-900/60 border border-gray-800/60 backdrop-blur-sm
-                    text-sm text-gray-200 placeholder:text-gray-600
-                    focus:outline-none focus:border-indigo-700/60 focus:bg-indigo-900/5
+                    bg-white border border-gray-200 shadow-sm
+                    text-sm text-gray-900 placeholder:text-gray-400
+                    focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100
                     transition-all duration-300 resize-none
-                    scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-700"
+                    scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200"
                 />
 
                 {jdText.length > 0 && (
-                  <p className="text-xs text-gray-700 text-right -mt-1">
+                  <p className="text-xs text-gray-500 text-right -mt-1">
                     {jdText.length} characters
                   </p>
                 )}
@@ -486,7 +453,7 @@ export default function UploadPage() {
             {/* Error banner */}
             {(error || status === 'error') && (
               <div className="flex items-start gap-3 px-5 py-4 rounded-2xl
-                bg-red-900/20 border border-red-800/40 text-sm text-red-400">
+                bg-rose-50 border border-rose-200 text-sm text-rose-700">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                   strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
                   className="w-5 h-5 shrink-0 mt-0.5">
@@ -502,21 +469,21 @@ export default function UploadPage() {
             {status === 'loading' && (
               <div className="flex flex-col items-center gap-5 py-8">
                 <div className="relative w-16 h-16">
-                  <div className="absolute inset-0 rounded-full border-2 border-violet-900/40" />
+                  <div className="absolute inset-0 rounded-full border-2 border-violet-100" />
                   <div className="absolute inset-0 rounded-full border-2 border-violet-500 border-t-transparent animate-spin" />
-                  <div className="absolute inset-0 flex items-center justify-center text-violet-400">
+                  <div className="absolute inset-0 flex items-center justify-center text-violet-600">
                     <IconSpark />
                   </div>
                 </div>
                 <div className="text-center space-y-1">
-                  <p className="text-sm font-semibold text-white">Running multi-agent analysis…</p>
-                  <p className="text-xs text-gray-600">6 AI agents evaluating your profile in parallel</p>
+                  <p className="text-sm font-bold text-gray-900">Running multi-agent analysis…</p>
+                  <p className="text-xs text-gray-500">6 AI agents evaluating your profile in parallel</p>
                   <div className="flex flex-wrap justify-center gap-1.5 mt-3">
                     {['Skills', 'Experience', 'Education', 'Culture Fit', 'Questions', 'Summary'].map(a => (
-                      <span key={a} className="text-xs px-2 py-0.5 rounded-full bg-violet-900/20 border border-violet-800/30 text-violet-400 animate-pulse">{a}</span>
+                      <span key={a} className="text-xs px-2 py-0.5 rounded-full bg-violet-50 border border-violet-200 text-violet-700 animate-pulse">{a}</span>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-700 mt-2">This usually takes 20–40 seconds</p>
+                  <p className="text-xs text-gray-400 mt-2">This usually takes 20–40 seconds</p>
                 </div>
               </div>
             )}
@@ -529,8 +496,8 @@ export default function UploadPage() {
               className={`w-full flex items-center justify-center gap-2.5 py-4
                 rounded-2xl text-sm font-semibold transition-all duration-300
                 ${canSubmit
-                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-900/30 hover:shadow-violet-800/40 hover:brightness-110 active:scale-[0.99]'
-                  : 'bg-gray-800/60 border border-gray-700/40 text-gray-600 cursor-not-allowed'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20 hover:brightness-110 active:scale-[0.99]'
+                  : 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed'
                 }`}
             >
               {status === 'loading' ? (
@@ -548,7 +515,7 @@ export default function UploadPage() {
             </button>
 
             {!canSubmit && status !== 'loading' && (
-              <p className="text-xs text-gray-700 text-center -mt-4">
+              <p className="text-xs text-gray-500 text-center -mt-4">
                 {!resumeFile && !jdText.trim()
                   ? 'Add your resume and job description to continue'
                   : !resumeFile
@@ -558,13 +525,6 @@ export default function UploadPage() {
             )}
           </>
         )}
-      </main>
-
-      {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-gray-800/50 py-4 text-center
-        text-xs text-gray-700">
-        PrepPilot · AI interview coaching over WhatsApp · {new Date().getFullYear()}
-      </footer>
     </div>
   );
 }

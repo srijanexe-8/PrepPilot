@@ -20,7 +20,7 @@ def get_llm() -> ChatGoogleGenerativeAI:
 
     Environment variables:
         GOOGLE_API_KEY  — required
-        GEMINI_MODEL    — default: gemini-2.5-flash
+        GEMINI_MODEL    — default: gemini-3.1-flash-lite
         GEMINI_TEMPERATURE — default: 0
     """
     api_key = os.getenv("GOOGLE_API_KEY", "").strip()
@@ -30,7 +30,7 @@ def get_llm() -> ChatGoogleGenerativeAI:
             "Please add it to your python-api/.env file."
         )
 
-    model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
     temperature = float(os.getenv("GEMINI_TEMPERATURE", "0"))
 
     return ChatGoogleGenerativeAI(

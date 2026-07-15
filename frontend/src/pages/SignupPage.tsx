@@ -6,17 +6,17 @@ import { useAuth } from '../store/AuthContext';
 function Logo() {
   return (
     <div className="flex items-center justify-center gap-2 mb-8">
-      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-900/40">
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-500/20">
         <span className="text-white font-bold text-lg">P</span>
       </div>
-      <span className="text-2xl font-bold text-white tracking-tight">PrepPilot</span>
+      <span className="text-2xl font-bold text-gray-900 tracking-tight">PrepPilot</span>
     </div>
   );
 }
 
 function ErrorBanner({ message }: { message: string }) {
   return (
-    <div className="error-banner" role="alert" aria-live="assertive">
+    <div className="flex items-start gap-3 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-xl" role="alert" aria-live="assertive">
       <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
           d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -69,31 +69,31 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 font-sans">
       {/* Background glow */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-md">
         <Logo />
 
-        <div className="card p-8">
-          <h1 className="text-2xl font-bold text-white mb-2">Create your account</h1>
-          <p className="text-gray-400 text-sm mb-8">
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-xl p-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Create your account</h1>
+          <p className="text-gray-500 text-sm mb-8">
             Start your personalised interview prep today.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5" id="signup-form" noValidate>
             <div>
-              <label htmlFor="signup-email" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email address
               </label>
               <input
                 id="signup-email"
                 type="email"
-                className="input-field"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
                 placeholder="you@email.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -103,14 +103,14 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label htmlFor="signup-password" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
-                <span className="ml-2 text-xs text-gray-500 font-normal">(minimum 8 characters)</span>
+                <span className="ml-2 text-xs text-gray-400 font-normal">(minimum 8 characters)</span>
               </label>
               <input
                 id="signup-password"
                 type="password"
-                className="input-field"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
                 placeholder="••••••••"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -120,13 +120,13 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label htmlFor="signup-confirm-password" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="signup-confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
                 Confirm password
               </label>
               <input
                 id="signup-confirm-password"
                 type="password"
-                className="input-field"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
@@ -140,7 +140,7 @@ export default function SignupPage() {
             <button
               id="signup-submit"
               type="submit"
-              className="btn-primary"
+              className="w-full py-3 px-6 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md shadow-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-white"
               disabled={loading}
             >
               {loading ? (
@@ -157,7 +157,7 @@ export default function SignupPage() {
 
           <p className="mt-6 text-center text-sm text-gray-500">
             Already have an account?{' '}
-            <Link to="/login" id="go-to-login" className="text-violet-400 hover:text-violet-300 font-medium transition-colors">
+            <Link to="/login" id="go-to-login" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
               Sign in
             </Link>
           </p>

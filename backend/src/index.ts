@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import authRouter from './routes/auth';
 import profileRouter from './routes/profile';
 import uploadRouter from './routes/upload';
+import roadmapRouter from './routes/roadmap';
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.get('/health', (_req, res) => {
 app.use('/auth', authRouter);
 app.use('/profile', profileRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api/roadmap', roadmapRouter);
 
 // ─── 404 catch-all ───────────────────────────────────────────────────────────
 
@@ -49,8 +51,8 @@ app.listen(PORT, () => {
   console.log(`   POST /auth/login`);
   console.log(`   GET  /profile/me  (protected)`);
   console.log(`   POST /api/upload  (protected)`);
-  console.log(`   GET  /api/upload  (protected)\n`);
+  console.log(`   GET  /api/upload  (protected)`);
+  console.log(`   GET  /api/roadmap (protected)\n`);
 });
 
 export default app;
-

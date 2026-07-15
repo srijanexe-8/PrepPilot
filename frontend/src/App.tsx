@@ -5,6 +5,8 @@ import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import UploadPage from './pages/UploadPage';
 import AnalysisPage from './pages/AnalysisPage';
+import RoadmapShell from './layouts/RoadmapShell';
+import RoadmapPage from './pages/RoadmapPage';
 
 export default function App() {
   return (
@@ -13,9 +15,15 @@ export default function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/upload" element={<UploadPage />} />
-        <Route path="/analysis" element={<AnalysisPage />} />
+        {/* ── Roadmap shell — light-themed section ── */}
+        <Route element={<RoadmapShell />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/upload" element={<UploadPage />} />
+          <Route path="/analysis" element={<AnalysisPage />} />
+          <Route path="/roadmap" element={<RoadmapPage />} />
+          {/* /roadmap/day/:dayNumber — daily answering flow (not yet built) */}
+        </Route>
+
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

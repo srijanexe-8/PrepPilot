@@ -141,3 +141,23 @@ export async function uploadDocuments(
     return { status: 0, error: 'Network error — make sure the backend server is running.' };
   }
 }
+
+export async function fetchAnalysis(
+  token: string
+): Promise<{ data?: UploadResult; error?: string; status: number }> {
+  try {
+    const res = await fetch(`${API_BASE}/api/upload`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const body = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      return { status: res.status, error: body.error || 'Failed to fetch analysis' };
+    }
+
+    return { status: res.status, data: body as UploadResult };
+  } catch {
+    return { status: 0, error: 'Network error' };
+  }
+}
