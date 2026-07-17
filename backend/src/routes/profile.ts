@@ -71,6 +71,51 @@ router.put('/', verifyToken, async (req: AuthRequest, res: Response): Promise<vo
   }
 });
 
+// PATCH /profile/whatsapp — save WhatsApp number (E.164 format required)
+router.patch('/whatsapp', verifyToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  const { whatsapp_number } = req.body as { whatsapp_number?: string };
+
+  if (!whatsapp_number || !whatsapp_number.trim()) {
+    res.status(400).json({ error: 'whatsapp_number is required' });
+    return;
+  }
+
+  // Validate E.164 format: + followed by 7–15 digits
+  const e164 = /^\+[1-9]\d{6,14}$/;
+  if (!e164.test(whatsapp_number.trim())) {
+    res.status(400).json({
+      error: 'Invalid phone number. Use E.164 format, e.g. +919876543210',
+    });
+    return;
+  }
+
+  try {
+    await pool.query(
+      `UPDATE users SET whatsapp_number = $2 WHERE id = $1`,
+      [req.userId, whatsapp_number.trim()]
+    );
+    res.json({ success: true, whatsappNumber: whatsapp_number.trim() });
+  } catch (err) {
+    console.error('WhatsApp number save error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /profile/whatsapp — disconnect WhatsApp
+router.delete('/whatsapp', verifyToken, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    await pool.query(
+      `UPDATE users SET whatsapp_number = NULL WHERE id = $1`,
+      [req.userId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('WhatsApp disconnect error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 // PATCH /profile/password — change password
 router.patch('/password', verifyToken, async (req: AuthRequest, res: Response): Promise<void> => {
   const { current_password, new_password } = req.body;

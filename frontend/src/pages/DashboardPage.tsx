@@ -174,7 +174,33 @@ export default function DashboardPage() {
         </button>
       </div>
 
+      {/* ── WhatsApp banner ─────────────────────────────────────────────────── */}
+      {!whatsapp_connected ? (
+        <div className="flex items-center justify-between gap-4 bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-3">
+          <div className="flex items-center gap-3">
+            <span className="text-lg">📱</span>
+            <p className="text-sm text-emerald-800 font-medium">
+              Get your daily question delivered to WhatsApp — free, every morning.
+            </p>
+          </div>
+          <button
+            id="dashboard-whatsapp-connect-btn"
+            onClick={() => navigate('/whatsapp')}
+            className="shrink-0 flex items-center gap-1.5 text-xs font-semibold text-emerald-700 border border-emerald-300 bg-white rounded-lg px-3 py-1.5 hover:bg-emerald-50 transition-colors"
+          >
+            Connect now
+            <ChevronRight size={12} />
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-xl w-fit">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-xs font-semibold text-emerald-700">WhatsApp ✓ Active — daily questions on</span>
+        </div>
+      )}
+
       {/* ── Stat cards ──────────────────────────────────────────────────────── */}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Readiness Score */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex items-center gap-5">
