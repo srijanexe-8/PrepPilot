@@ -12,6 +12,7 @@ import {
   MIN_DAYS,
   MAX_DAYS,
 } from '../services/roadmapGeneration';
+import { prepareAndSendDay } from '../services/scheduler/dailyReminder';
 
 const router = Router();
 
@@ -178,6 +179,19 @@ router.post('/generate', verifyToken, async (req: AuthRequest, res: Response): P
 
     await client.query('COMMIT');
 
+    // Instantly send Day 1 to WhatsApp if they have it connected
+    try {
+      const dayOne = insertedDays.find(d => d.day_number === minDayNumber);
+      if (dayOne) {
+        // Fire asynchronously so it doesn't block the API response
+        prepareAndSendDay(userId, dayOne.id).catch(err => {
+          console.error('[roadmap] async instant whatsapp send error:', err);
+        });
+      }
+    } catch (err) {
+      console.error('[roadmap] failed to trigger instant whatsapp send:', err);
+    }
+
     // Respond in the same shape as GET /api/roadmap so the frontend can drop it
     // straight into state. Fresh days have no practice content generated yet.
     res.status(201).json({
@@ -342,8 +356,7 @@ router.post('/:dayId/complete', verifyToken, async (req: AuthRequest, res: Respo
 
     await client.query('COMMIT');
 
-    // Notify when completing this day actually unlocked the next one. Runs
-    // post-commit and best-effort, so it never blocks the completion response.
+    // Notify when completing this day actually unlocked the next one.
     const unlocked = nextRes.rows[0];
     if (unlocked) {
       await createNotification(
@@ -352,6 +365,11 @@ router.post('/:dayId/complete', verifyToken, async (req: AuthRequest, res: Respo
         `Day ${unlocked.day_number} unlocked: ${unlocked.topic}`,
         unlocked.id
       );
+
+      // Instantly send the newly unlocked question to WhatsApp
+      prepareAndSendDay(userId, unlocked.id).catch(err => {
+        console.error('[roadmap] async instant whatsapp send error on complete:', err);
+      });
     }
 
     res.json({

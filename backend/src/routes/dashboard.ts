@@ -61,22 +61,40 @@ router.get('/', verifyToken, async (req: AuthRequest, res: Response): Promise<vo
       const jd = analysisReport.jd as { role_title?: string } | undefined;
       roleTitle = jd?.role_title || null;
 
-      // Extract topic confidence from skills data
+      // Extract topic confidence from new evidence-based requirement_matches
       const skills = analysisReport.skills as {
+        requirement_matches?: Array<{
+          requirement: string;
+          strength: 'strong' | 'partial' | 'weak' | 'none';
+        }>;
+        // legacy flat arrays (kept for fallback)
         matched?: string[];
         missing?: string[];
         partial?: string[];
       } | undefined;
       if (skills) {
-        const matched = skills.matched || [];
-        const missing = skills.missing || [];
-        const partial = skills.partial || [];
-        const allSkills = [
-          ...matched.map(s => ({ topic: s, percent: 90 })),
-          ...partial.map(s => ({ topic: s, percent: 50 })),
-          ...missing.map(s => ({ topic: s, percent: 15 })),
-        ];
-        topicConfidenceFromAnalysis = allSkills.slice(0, 6);
+        const matches = skills.requirement_matches ?? [];
+        if (matches.length > 0) {
+          topicConfidenceFromAnalysis = matches.slice(0, 6).map((m) => ({
+            topic: m.requirement,
+            percent:
+              m.strength === 'strong' ? 90
+              : m.strength === 'partial' ? 55
+              : m.strength === 'weak'   ? 25
+              : 10,
+          }));
+        } else {
+          // Fallback for older analyses that still have flat arrays
+          const matched = skills.matched || [];
+          const missing = skills.missing || [];
+          const partial = skills.partial || [];
+          const allSkills = [
+            ...matched.map((s) => ({ topic: s, percent: 90 })),
+            ...partial.map((s) => ({ topic: s, percent: 50 })),
+            ...missing.map((s) => ({ topic: s, percent: 15 })),
+          ];
+          topicConfidenceFromAnalysis = allSkills.slice(0, 6);
+        }
       }
     }
 
