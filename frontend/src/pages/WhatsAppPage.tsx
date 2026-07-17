@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, RefreshCcw, Info } from 'lucide-react';
+import { CheckCircle2, Info, Unlink, Loader2, AlertCircle } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { useAuth } from '../store/AuthContext';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // ── WhatsApp SVG Icon ─────────────────────────────────────────────────────────
 
@@ -19,71 +23,17 @@ function WhatsAppIcon({ size = 24 }: { size?: number }) {
   );
 }
 
-// ── QR Code placeholder ───────────────────────────────────────────────────────
+// ── Real QR Code (encodes the wa.me deep link) ───────────────────────────────
 
-function QRCodePlaceholder() {
+function WhatsAppQRCode({ waLink }: { waLink: string }) {
   return (
-    <svg
-      width="100"
-      height="100"
-      viewBox="0 0 100 100"
-      xmlns="http://www.w3.org/2000/svg"
-      className="rounded"
-    >
-      {/* Top-left finder */}
-      <rect x="4" y="4" width="28" height="28" rx="3" fill="#1a5c45" />
-      <rect x="9" y="9" width="18" height="18" rx="1" fill="white" />
-      <rect x="13" y="13" width="10" height="10" rx="1" fill="#1a5c45" />
-
-      {/* Top-right finder */}
-      <rect x="68" y="4" width="28" height="28" rx="3" fill="#1a5c45" />
-      <rect x="73" y="9" width="18" height="18" rx="1" fill="white" />
-      <rect x="77" y="13" width="10" height="10" rx="1" fill="#1a5c45" />
-
-      {/* Bottom-left finder */}
-      <rect x="4" y="68" width="28" height="28" rx="3" fill="#1a5c45" />
-      <rect x="9" y="73" width="18" height="18" rx="1" fill="white" />
-      <rect x="13" y="77" width="10" height="10" rx="1" fill="#1a5c45" />
-
-      {/* Data modules */}
-      <rect x="40" y="4" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="50" y="4" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="40" y="14" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="56" y="14" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="44" y="24" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="50" y="24" width="6" height="6" rx="1" fill="#1a5c45" />
-
-      <rect x="4" y="40" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="14" y="40" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="4" y="50" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="20" y="50" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="4" y="60" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="14" y="60" width="6" height="6" rx="1" fill="#1a5c45" />
-
-      <rect x="40" y="40" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="50" y="40" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="60" y="40" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="40" y="50" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="56" y="50" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="44" y="60" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="60" y="60" width="6" height="6" rx="1" fill="#1a5c45" />
-
-      <rect x="40" y="70" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="50" y="70" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="60" y="70" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="44" y="80" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="56" y="80" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="40" y="90" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="54" y="90" width="6" height="6" rx="1" fill="#1a5c45" />
-
-      <rect x="70" y="40" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="80" y="40" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="90" y="40" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="70" y="50" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="86" y="50" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="74" y="60" width="6" height="6" rx="1" fill="#1a5c45" />
-      <rect x="90" y="60" width="6" height="6" rx="1" fill="#1a5c45" />
-    </svg>
+    <QRCodeSVG
+      value={waLink}
+      size={100}
+      bgColor="#ffffff"
+      fgColor="#1a5c45"
+      level="M"
+    />
   );
 }
 
@@ -102,9 +52,99 @@ function StepItem({ number, text }: { number: number; text: string }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
+interface SandboxInfo {
+  sandboxNumber: string;
+  joinKeyword: string;
+  waLink: string;
+}
+
 export default function WhatsAppPage() {
+  const { token } = useAuth();
   const navigate = useNavigate();
   const [phone, setPhone] = useState('');
+  const [sandboxInfo, setSandboxInfo] = useState<SandboxInfo | null>(null);
+  const [connected, setConnected] = useState<string | null>(null); // saved number if already connected
+  const [saving, setSaving] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  // Fetch sandbox info + current user profile on mount
+  useEffect(() => {
+    // Sandbox info (no auth needed)
+    fetch(`${API_BASE}/api/whatsapp/sandbox-info`)
+      .then((r) => r.json())
+      .then((data: SandboxInfo) => setSandboxInfo(data))
+      .catch(() => {});
+
+    // User profile to check if already connected
+    if (token) {
+      fetch(`${API_BASE}/profile/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => r.json())
+        .then((data: { whatsappNumber?: string }) => {
+          if (data.whatsappNumber) {
+            setConnected(data.whatsappNumber);
+            setPhone(data.whatsappNumber);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [token]);
+
+  const joinKeyword = sandboxInfo?.joinKeyword ?? 'join grew-worry';
+  const waLink = sandboxInfo?.waLink ?? `https://wa.me/14155238886?text=${encodeURIComponent('join grew-worry')}`;
+
+  const handleConnect = async () => {
+    setError(null);
+    if (!phone.trim()) {
+      setError('Please enter your WhatsApp number.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/profile/whatsapp`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ whatsapp_number: phone.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Failed to save number.');
+        return;
+      }
+      setConnected(phone.trim());
+      setSuccess(true);
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    setDisconnecting(true);
+    setError(null);
+    try {
+      await fetch(`${API_BASE}/profile/whatsapp`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setConnected(null);
+      setPhone('');
+      setSuccess(false);
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setDisconnecting(false);
+    }
+  };
+
+  const isConnected = !!connected;
 
   return (
     <div className="flex-1 p-6 bg-gray-50 min-h-full">
@@ -129,60 +169,114 @@ export default function WhatsAppPage() {
               Meet your coach where<br />you already are.
             </h1>
 
-            {/* Subtitle */}
-            <p className="text-sm text-gray-500 leading-relaxed mb-8 max-w-sm">
-              Enter the WhatsApp number you use in the Twilio Sandbox, then{' '}
-              <span className="text-emerald-600 underline cursor-pointer hover:text-emerald-700 transition-colors">
-                join the sandbox
-              </span>{' '}
-              on your phone.
-            </p>
+            {/* Connected state */}
+            {isConnected ? (
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle2 size={18} className="text-emerald-600" />
+                  <span className="text-sm font-semibold text-emerald-700">
+                    Connected — {connected}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 mb-5 max-w-sm">
+                  You'll receive your daily interview question on WhatsApp every morning.
+                  Make sure you've sent <span className="font-mono font-semibold text-gray-700">"{joinKeyword}"</span> to{' '}
+                  <span className="font-mono font-semibold text-gray-700">+1 415 523 8886</span> to activate delivery.
+                </p>
+                <button
+                  id="whatsapp-disconnect-btn"
+                  onClick={handleDisconnect}
+                  disabled={disconnecting}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-all disabled:opacity-60"
+                >
+                  {disconnecting ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Unlink size={14} />
+                  )}
+                  Disconnect WhatsApp
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Subtitle */}
+                <p className="text-sm text-gray-500 leading-relaxed mb-8 max-w-sm">
+                  Enter your WhatsApp number, then{' '}
+                  <a
+                    href={waLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-600 underline hover:text-emerald-700 transition-colors"
+                  >
+                    join the sandbox
+                  </a>{' '}
+                  on your phone.
+                </p>
 
-            {/* Phone input */}
-            <div className="mb-6">
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
-                WhatsApp Number (E.164)
-              </label>
-              <input
-                type="tel"
-                placeholder="+919876543210"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full max-w-xs px-4 py-2.5 rounded-lg border border-gray-300 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-              />
-            </div>
+                {/* Phone input */}
+                <div className="mb-6">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
+                    WhatsApp Number (E.164)
+                  </label>
+                  <input
+                    id="whatsapp-phone-input"
+                    type="tel"
+                    placeholder="+91 9599028724"
+                    value={phone}
+                    onChange={(e) => { setPhone(e.target.value); setError(null); }}
+                    className="w-full max-w-xs px-4 py-2.5 rounded-lg border border-gray-300 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                  />
+                  <p className="text-[11px] text-gray-400 mt-1.5">Include country code — e.g. <span className="font-mono">+91</span> for India</p>
+                  {error && (
+                    <div className="flex items-center gap-1.5 mt-2 text-red-500 text-xs">
+                      <AlertCircle size={12} />
+                      {error}
+                    </div>
+                  )}
+                </div>
 
-            {/* Steps */}
-            <div className="space-y-3 mb-8">
-              <StepItem number={1} text="Scan the QR code with WhatsApp" />
-              <StepItem number={2} text="Send the pre-filled join message" />
-              <StepItem number={3} text="Connect the same number above" />
-            </div>
+                {/* Steps */}
+                <div className="space-y-3 mb-8">
+                  <StepItem number={1} text="Scan the QR code → WhatsApp opens with join message pre-filled" />
+                  <StepItem number={2} text={`Tap Send — you'll get a confirmation from Twilio`} />
+                  <StepItem number={3} text="Enter and connect the same number above" />
+                </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-3">
-              <button
-                disabled
-                className="flex items-center gap-2 px-5 py-2.5 bg-emerald-700 text-white text-sm font-semibold rounded-lg cursor-not-allowed opacity-90 transition-all"
-              >
-                Connect this number
-                <CheckCircle2 size={15} />
-              </button>
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
-              >
-                Maybe later
-              </button>
-            </div>
+                {/* Actions */}
+                <div className="flex items-center gap-3">
+                  <button
+                    id="whatsapp-connect-btn"
+                    onClick={handleConnect}
+                    disabled={saving || !phone.trim()}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-emerald-700 text-white text-sm font-semibold rounded-lg hover:bg-emerald-800 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                  >
+                    {saving ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : success ? (
+                      <CheckCircle2 size={15} />
+                    ) : null}
+                    {saving ? 'Connecting…' : 'Connect this number'}
+                  </button>
+                  <button
+                    id="whatsapp-skip-btn"
+                    onClick={() => navigate('/dashboard')}
+                    className="px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
+                  >
+                    Maybe later
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           {/* ── Right panel ─────────────────────────────────────────────────── */}
           <div className="w-[240px] shrink-0 bg-emerald-50/60 border-l border-gray-100 flex flex-col items-center justify-center p-8 gap-4">
-            {/* QR code */}
-            <div className="p-3 bg-white rounded-xl shadow-sm border border-gray-100">
-              <QRCodePlaceholder />
-            </div>
+            {/* Real scannable QR code — encodes the wa.me join link */}
+            <a href={waLink} target="_blank" rel="noopener noreferrer" title="Scan to open WhatsApp">
+              <div className="p-3 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer">
+                <WhatsAppQRCode waLink={waLink} />
+              </div>
+            </a>
 
             {/* Label */}
             <div className="text-center">
@@ -190,6 +284,11 @@ export default function WhatsAppPage() {
               <p className="text-[11px] text-gray-500 leading-relaxed text-center">
                 Use your phone camera or WhatsApp's QR scanner
               </p>
+              {sandboxInfo && (
+                <p className="text-[10px] font-mono text-emerald-700 mt-2 bg-emerald-50 px-2 py-1 rounded">
+                  {sandboxInfo.joinKeyword}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -198,7 +297,8 @@ export default function WhatsAppPage() {
         <div className="flex items-start gap-2 mt-4 px-1">
           <Info size={13} className="text-gray-400 mt-0.5 shrink-0" />
           <p className="text-[11px] text-gray-400 leading-relaxed">
-            This prototype mirrors the Twilio WhatsApp Sandbox join flow. Add your Twilio credentials in the API layer to send live messages.
+            Uses the Twilio WhatsApp Sandbox — free for testing. Each user must send{' '}
+            <span className="font-mono">"{joinKeyword}"</span> to activate message delivery.
           </p>
         </div>
       </div>
