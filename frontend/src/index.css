@@ -2,13 +2,372 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME TOKENS
+
+   Tailwind's colour utilities are wired to these variables (see
+   tailwind.config.js), so flipping `.dark` on <html> re-skins every existing
+   className — hover/focus variants and opacity modifiers included.
+
+   Light values are the stock Tailwind v3 palette, so light mode is unchanged.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces the app paints on. */
+  --app-bg: 249 250 251;      /* page background            */
+  --app-surface: 255 255 255; /* cards, sidebar, header     */
+
+  --c-gray-50: 249 250 251;
+  --c-gray-100: 243 244 246;
+  --c-gray-200: 229 231 235;
+  --c-gray-300: 209 213 219;
+  --c-gray-400: 156 163 175;
+  --c-gray-500: 107 114 128;
+  --c-gray-600: 75 85 99;
+  --c-gray-700: 55 65 81;
+  --c-gray-800: 31 41 55;
+  --c-gray-900: 17 24 39;
+  --c-gray-950: 3 7 18;
+
+  --c-emerald-50: 236 253 245;
+  --c-emerald-100: 209 250 229;
+  --c-emerald-200: 167 243 208;
+  --c-emerald-300: 110 231 183;
+  --c-emerald-400: 52 211 153;
+  --c-emerald-500: 16 185 129;
+  --c-emerald-600: 5 150 105;
+  --c-emerald-700: 4 120 87;
+  --c-emerald-800: 6 95 70;
+  --c-emerald-900: 6 78 59;
+
+  --c-green-300: 134 239 172;
+  --c-green-400: 74 222 128;
+  --c-green-500: 34 197 94;
+  --c-green-800: 22 101 52;
+  --c-green-900: 20 83 45;
+
+  --c-amber-50: 255 251 235;
+  --c-amber-200: 253 230 138;
+  --c-amber-400: 251 191 36;
+  --c-amber-500: 245 158 11;
+  --c-amber-600: 217 119 6;
+  --c-amber-700: 180 83 9;
+  --c-amber-800: 146 64 14;
+  --c-amber-900: 120 53 15;
+
+  --c-red-50: 254 242 242;
+  --c-red-100: 254 226 226;
+  --c-red-200: 254 202 202;
+  --c-red-300: 252 165 165;
+  --c-red-400: 248 113 113;
+  --c-red-500: 239 68 68;
+  --c-red-600: 220 38 38;
+  --c-red-700: 185 28 28;
+  --c-red-800: 153 27 27;
+  --c-red-900: 127 29 29;
+
+  --c-rose-50: 255 241 242;
+  --c-rose-200: 254 205 211;
+  --c-rose-400: 251 113 133;
+  --c-rose-500: 244 63 94;
+  --c-rose-600: 225 29 72;
+  --c-rose-700: 190 18 60;
+
+  --c-indigo-50: 238 242 255;
+  --c-indigo-200: 199 210 254;
+  --c-indigo-500: 99 102 241;
+  --c-indigo-600: 79 70 229;
+  --c-indigo-700: 67 56 202;
+
+  --c-violet-50: 245 243 255;
+  --c-violet-100: 237 233 254;
+  --c-violet-200: 221 214 254;
+  --c-violet-500: 139 92 246;
+  --c-violet-600: 124 58 237;
+  --c-violet-700: 109 40 217;
+  --c-violet-900: 76 29 149;
+
+  --c-blue-50: 239 246 255;
+  --c-blue-200: 191 219 254;
+  --c-blue-500: 59 130 246;
+  --c-blue-700: 29 78 216;
+
+  --c-teal-50: 240 253 250;
+  --c-teal-400: 45 212 191;
+  --c-teal-500: 20 184 166;
+
+  --c-orange-500: 249 115 22;
+  --c-orange-600: 234 88 12;
+
+  --c-yellow-400: 250 204 21;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   PREMIUM DARK — graphite, not black.
+
+   The neutral ramp is inverted: 50–300 become progressively lighter *fills*
+   (the codebase uses them for backgrounds and borders) while 400–900 become
+   progressively lighter *text* (the codebase uses them for type). The jump
+   between 300 and 400 is deliberate and mirrors that split.
+
+   Elevation ladder — each step reads as physically higher:
+     page  #0c0d10  →  card  #15171a  →  hover  #1c1f24  →  border  #24282e
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.dark {
+  color-scheme: dark;
+
+  --app-bg: 12 13 16;
+  --app-surface: 21 23 26;
+
+  /* Fills — low end of the ramp. */
+  --c-gray-50: 12 13 16;    /* page base                        */
+  --c-gray-100: 28 31 36;   /* hover fill — lifts above a card  */
+  --c-gray-200: 36 40 46;   /* borders, inset fills             */
+  --c-gray-300: 48 53 60;   /* strong border, separators        */
+  /* Type — high end of the ramp. */
+  --c-gray-400: 139 146 153; /* muted      — 5.9:1 on page base */
+  --c-gray-500: 161 168 176; /* secondary                       */
+  --c-gray-600: 194 200 206; /* body                            */
+  --c-gray-700: 216 221 226; /* strong body                     */
+  --c-gray-800: 232 235 238; /* subheads                        */
+  --c-gray-900: 242 244 246; /* headings — off-white, not #fff  */
+  --c-gray-950: 255 255 255;
+
+  /* Emerald keeps its role as the accent, brightened to carry on graphite.
+     600 doubles as accent text and solid-button fill (see .bg-emerald-600
+     correction below); 700 is text-on-tint, its fill role is corrected too. */
+  --c-emerald-50: 9 38 30;
+  --c-emerald-100: 13 54 42;
+  --c-emerald-200: 20 74 58;
+  --c-emerald-300: 110 231 183;
+  --c-emerald-400: 52 211 153;
+  --c-emerald-500: 16 185 129;
+  --c-emerald-600: 16 185 129;
+  --c-emerald-700: 110 231 183;
+  --c-emerald-800: 167 243 208;
+  --c-emerald-900: 209 250 229;
+
+  --c-green-300: 134 239 172;
+  --c-green-400: 74 222 128;
+  --c-green-500: 34 197 94;
+  --c-green-800: 134 239 172;
+  --c-green-900: 187 247 208;
+
+  --c-amber-50: 43 32 8;
+  --c-amber-200: 82 60 14;
+  --c-amber-400: 251 191 36;
+  --c-amber-500: 245 158 11;
+  --c-amber-600: 252 191 73;
+  --c-amber-700: 253 214 138;
+  --c-amber-800: 253 230 175;
+  --c-amber-900: 254 240 200;
+
+  --c-red-50: 46 18 20;
+  --c-red-100: 66 24 27;
+  --c-red-200: 92 32 36;
+  --c-red-300: 252 165 165;
+  --c-red-400: 248 113 113;
+  --c-red-500: 239 68 68;
+  --c-red-600: 248 113 113;
+  --c-red-700: 252 165 165;
+  --c-red-800: 254 202 202;
+  --c-red-900: 254 226 226;
+
+  --c-rose-50: 48 18 25;
+  --c-rose-200: 96 32 45;
+  --c-rose-400: 251 113 133;
+  --c-rose-500: 244 63 94;
+  --c-rose-600: 251 113 133;
+  --c-rose-700: 253 164 175;
+
+  --c-indigo-50: 24 26 56;
+  --c-indigo-200: 55 58 110;
+  --c-indigo-500: 129 140 248;
+  --c-indigo-600: 129 140 248;
+  --c-indigo-700: 165 180 252;
+
+  --c-violet-50: 32 24 56;
+  --c-violet-100: 44 33 74;
+  --c-violet-200: 66 50 110;
+  --c-violet-500: 167 139 250;
+  --c-violet-600: 167 139 250;
+  --c-violet-700: 196 181 253;
+  --c-violet-900: 221 214 254;
+
+  --c-blue-50: 18 28 52;
+  --c-blue-200: 45 66 116;
+  --c-blue-500: 96 165 250;
+  --c-blue-700: 147 197 253;
+
+  --c-teal-50: 10 40 40;
+  --c-teal-400: 45 212 191;
+  --c-teal-500: 20 184 166;
+
+  --c-orange-500: 249 115 22;
+  --c-orange-600: 251 146 60;
+
+  --c-yellow-400: 250 204 21;
+}
+
 @layer base {
   * {
     box-sizing: border-box;
   }
   body {
     font-family: 'Inter', sans-serif;
-    @apply bg-gray-950 text-gray-100 antialiased;
+    background-color: rgb(var(--app-bg));
+    color: rgb(var(--c-gray-900));
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK-MODE CORRECTIONS
+
+   A handful of places use colour in a direction the ramp inversion gets wrong.
+   Each is corrected explicitly rather than by weakening the token system.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* `white` must stay true white for `text-white` on coloured buttons, so the
+   card surface is remapped here instead of through the token ramp. */
+.dark .bg-white {
+  background-color: rgb(var(--app-surface));
+}
+
+/* `hover:bg-gray-50` sits on white cards; against a card the page-base token
+   would read as a press-down. Lift it instead. */
+.dark .hover\:bg-gray-50:hover {
+  background-color: rgb(var(--c-gray-100));
+}
+
+/* Solid accent buttons: bright emerald carries dark ink far better than white
+   (9:1 vs 2.9:1), and is the look premium dark UIs converge on. */
+.dark .bg-emerald-600.text-white,
+.dark .bg-emerald-500.text-white,
+.dark .bg-emerald-600.text-white:hover,
+.dark .hover\:bg-emerald-700:hover.text-white {
+  color: #04140f;
+}
+
+/* emerald-700's token is text-on-tint (bright); its fill role needs the
+   opposite, so solid fills and their hovers are set back to real surfaces. */
+.dark .bg-emerald-700,
+.dark .hover\:bg-emerald-700:hover {
+  background-color: rgb(52 211 153);
+}
+.dark .hover\:bg-emerald-800:hover {
+  background-color: rgb(110 231 183);
+}
+
+/* Modal scrims are meant to darken whatever is behind them — inverting them
+   would wash the screen out. Deepen instead. */
+.dark .bg-gray-900\/40 {
+  background-color: rgb(0 0 0 / 0.72);
+}
+
+/* The one near-black button in the app (RoadmapPage "Try again"). Inverted it
+   becomes a near-white surface, so its white label has to flip to dark ink —
+   which lands on the inverted-primary look dark UIs use for this anyway. */
+.dark .bg-gray-900.text-white {
+  color: rgb(var(--c-gray-50));
+}
+
+/* Neutral fallback chip (AnalysisPage recommendation colours). */
+.dark .bg-gray-700\/30 {
+  background-color: rgb(var(--c-gray-200) / 0.6);
+}
+.dark .border-gray-600\/40 {
+  border-color: rgb(var(--c-gray-300) / 0.7);
+}
+
+/* Rings/borders drawn in true white to punch out of a light page read as
+   glare on graphite; match the surface they sit on. */
+.dark .ring-white {
+  --tw-ring-color: rgb(var(--app-surface));
+}
+.dark .border-white {
+  border-color: rgb(var(--c-gray-300));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PREMIUM DEPTH
+
+   On white, shadows are grey haze. On graphite that reads as mud — depth has
+   to come from a near-black cast plus a hairline top highlight, which is what
+   sells a surface as lit from above.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.dark .shadow-sm {
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.04),
+              0 1px 2px 0 rgb(0 0 0 / 0.5);
+}
+.dark .shadow,
+.dark .shadow-md {
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.045),
+              0 2px 6px -1px rgb(0 0 0 / 0.55),
+              0 1px 3px -1px rgb(0 0 0 / 0.4);
+}
+.dark .shadow-lg {
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.05),
+              0 10px 24px -6px rgb(0 0 0 / 0.62),
+              0 4px 10px -4px rgb(0 0 0 / 0.45);
+}
+.dark .shadow-xl {
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.055),
+              0 18px 40px -10px rgb(0 0 0 / 0.68),
+              0 6px 16px -6px rgb(0 0 0 / 0.5);
+}
+.dark .shadow-2xl {
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.06),
+              0 30px 64px -14px rgb(0 0 0 / 0.75),
+              0 10px 24px -8px rgb(0 0 0 / 0.55);
+}
+
+/* Native chrome: scrollbars and form controls follow the theme. */
+.dark ::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: rgb(var(--c-gray-50));
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgb(var(--c-gray-300));
+  border: 3px solid rgb(var(--c-gray-50));
+  border-radius: 999px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--c-gray-400) / 0.6);
+}
+.dark ::selection {
+  background: rgb(var(--c-emerald-500) / 0.3);
+  color: rgb(var(--c-gray-900));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME CROSSFADE
+
+   Applied to <html> only for the duration of a toggle, so surfaces ease
+   between themes without adding a transition to every paint on first load.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.theme-anim,
+.theme-anim *,
+.theme-anim *::before,
+.theme-anim *::after {
+  transition: background-color 260ms ease, border-color 260ms ease,
+              color 260ms ease, fill 260ms ease, box-shadow 260ms ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-anim,
+  .theme-anim *,
+  .theme-anim *::before,
+  .theme-anim *::after {
+    transition: none !important;
   }
 }
 

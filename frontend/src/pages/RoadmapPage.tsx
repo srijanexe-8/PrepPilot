@@ -104,11 +104,11 @@ function DayCard({
             }
             : undefined
         }
-        className={`flex-1 rounded-2xl border p-5 mb-4 transition-shadow hover:shadow-sm ${isCompleted
-            ? 'border-gray-100 bg-gray-50/70 cursor-pointer hover:border-emerald-200'
+        className={`flex-1 rounded-2xl border p-5 mb-4 transition-all duration-300 hover:shadow-sm ${isCompleted
+            ? 'border-gray-100 bg-gray-50/70 cursor-pointer hover:border-emerald-200 hover:scale-[1.02]'
             : isToday
-              ? 'border-emerald-200 bg-white shadow-sm'
-              : 'border-gray-200 bg-white'
+              ? 'border-emerald-200 bg-white shadow-sm hover:scale-[1.02]'
+              : 'border-gray-200 bg-white opacity-50'
           }`}
       >
         <div className="flex items-start gap-3">

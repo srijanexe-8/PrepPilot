@@ -178,10 +178,10 @@ prep-pilot/
 Known and tracked in [PRD §7](docs/PRD.md#7-known-gaps--tech-debt):
 
 - **WhatsApp is outbound only.** There's no inbound webhook — replying to a message does nothing. Answers are submitted in the web app.
-- **Roadmap answers don't move the readiness score.** The roadmap and dashboard write to different tables; only the dashboard's answer flow affects the score.
-- **Refreshing the page logs you out.** The auth token is held in memory, and there are no route guards.
 - **Regenerating a roadmap deletes all progress**, with no confirmation.
 - **No tests** in any of the three services.
+
+*(Note: Auth persistence across refreshes and unified roadmap/dashboard scoring have recently been resolved!)*
 
 ---
 

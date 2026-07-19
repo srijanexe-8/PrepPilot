@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import confetti from 'canvas-confetti';
 import {
   Target,
   Briefcase,
@@ -265,6 +266,18 @@ export default function AnalysisPage() {
       }
     });
   }, [token, data]);
+
+  useEffect(() => {
+    if (location.state?.justGenerated) {
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+      // Clear state so it doesn't fire again on reload
+      navigate(location.pathname, { replace: true, state: { ...location.state, justGenerated: false } });
+    }
+  }, [location.state?.justGenerated, navigate, location.pathname, location.state]);
 
   if (loading) {
     return (

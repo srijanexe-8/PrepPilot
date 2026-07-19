@@ -247,7 +247,7 @@ const ANALYSIS_STAGES = [
   'Writing up your report',
 ];
 
-const STAGE_INTERVAL_MS = 13_000;
+const STAGE_INTERVAL_MS = 5_000;
 
 /** Walks the stage labels while active, holding on the last one. */
 function useAnalysisStage(active: boolean) {
@@ -328,7 +328,7 @@ export default function UploadPage() {
     setResult(resp.data);
     setStatus('success');
     // Navigate to the full analysis page, passing all agent data
-    navigate('/analysis', { state: { result: resp.data } });
+    navigate('/analysis', { state: { result: resp.data, justGenerated: true } });
   };
 
   const canSubmit =

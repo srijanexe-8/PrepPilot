@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/AuthContext';
 import { fetchDashboard, submitPracticeAnswer, type DashboardData } from '../api/dashboard';
+import toast from 'react-hot-toast';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import {
   Sparkles,
@@ -77,7 +78,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [answerText, setAnswerText] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ from: 'bot' | 'user'; text: string }[]>([]);
+  const [chatMessages, setChatMessages] = useState<{ from: 'bot' | 'user'; text: string; score?: number }[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -108,22 +109,36 @@ export default function DashboardPage() {
     setSubmitting(false);
 
     if (res.data) {
+      toast.success('Answer submitted successfully!');
       setData(prev => prev ? {
         ...prev,
         readiness_score: res.data!.readiness_score,
         sessions_this_week: res.data!.sessions_this_week,
         today_question: res.data!.today_question,
       } : prev);
-      setChatMessages(prev => [...prev, { from: 'bot', text: 'Answer recorded! Great work. Move on to your next question when ready.' }]);
+      
+      setChatMessages(prev => [...prev, { 
+        from: 'bot', 
+        text: res.data!.feedback || 'Answer recorded! Great work. Move on to your next question when ready.',
+        score: res.data!.ai_score
+      }]);
+    } else {
+      toast.error('Failed to submit answer. Please try again.');
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-          <p className="text-sm text-gray-500">Loading dashboard...</p>
+      <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6 pb-16 animate-in fade-in duration-500">
+        <div className="h-16 w-1/3 bg-gray-200 rounded-xl animate-pulse mb-8" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="h-40 bg-gray-200 rounded-2xl animate-pulse" />
+          <div className="h-40 bg-gray-200 rounded-2xl animate-pulse" />
+          <div className="h-40 bg-gray-200 rounded-2xl animate-pulse" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="h-80 bg-gray-200 rounded-2xl animate-pulse" />
+          <div className="h-80 bg-gray-200 rounded-2xl animate-pulse" />
         </div>
       </div>
     );
@@ -145,6 +160,29 @@ export default function DashboardPage() {
   } = data;
 
   const sessionsRemaining = Math.max(0, sessions_goal - sessions_this_week);
+
+  if (readiness_score === 0 && !today_question && topic_confidence.length === 0) {
+    return (
+      <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6 pb-16 animate-in fade-in duration-500">
+        <div className="text-center py-20 px-6 border-2 border-dashed border-emerald-200 rounded-3xl bg-emerald-50/30">
+          <div className="w-20 h-20 mx-auto bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-6 shadow-sm">
+            <Target size={32} />
+          </div>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Ready to start preparing?</h2>
+          <p className="text-gray-500 max-w-lg mx-auto mb-8">
+            Upload your resume and the job description you are targeting. Our AI will build a personalized, day-by-day practice roadmap just for you.
+          </p>
+          <button
+            onClick={() => navigate('/upload')}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-colors shadow-lg shadow-emerald-500/30"
+          >
+            Create Your First Plan
+            <ArrowRight size={18} />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6 pb-16 animate-in fade-in duration-500">
@@ -203,7 +241,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Readiness Score */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex items-center gap-5">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex items-center gap-5 hover:scale-[1.02] transition-transform duration-300">
           <ScoreRing score={readiness_score} />
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Readiness Score</p>
@@ -220,7 +258,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Practice This Week */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:scale-[1.02] transition-transform duration-300">
           <div className="flex items-center gap-2 mb-3">
             <Target size={16} className="text-emerald-600" />
             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Practice This Week</p>
@@ -243,7 +281,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Next Interview */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:scale-[1.02] transition-transform duration-300">
           <div className="flex items-center gap-2 mb-3">
             <Calendar size={16} className="text-violet-600" />
             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Next Interview</p>
@@ -360,11 +398,22 @@ export default function DashboardPage() {
             )}
             {chatMessages.map((msg, i) => (
               <div key={i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                   msg.from === 'user'
                     ? 'bg-emerald-600 text-white rounded-br-md'
                     : 'bg-white border border-gray-200 text-gray-800 rounded-bl-md shadow-sm'
                 }`}>
+                  {msg.score !== undefined && (
+                    <div className="mb-2">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
+                        msg.score >= 8 ? 'bg-green-100 text-green-800' :
+                        msg.score >= 5 ? 'bg-amber-100 text-amber-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        AI Score: {msg.score}/10
+                      </span>
+                    </div>
+                  )}
                   {msg.text}
                 </div>
               </div>
@@ -399,7 +448,7 @@ export default function DashboardPage() {
       {/* ── Readiness Trend + Topic Confidence ──────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Readiness Trend Chart */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:scale-[1.02] transition-transform duration-300">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <TrendingUp size={16} className="text-emerald-600" />
@@ -444,7 +493,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Topic Confidence */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:scale-[1.02] transition-transform duration-300">
           <div className="flex items-center gap-2 mb-5">
             <Target size={16} className="text-violet-600" />
             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Topic Confidence</p>
@@ -483,7 +532,7 @@ export default function DashboardPage() {
       {/* ── Bottom row ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Weekly Review */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:scale-[1.02] transition-transform duration-300">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles size={16} className="text-emerald-600" />
             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Weekly Review</p>
