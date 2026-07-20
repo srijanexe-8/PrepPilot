@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS users (
   email            TEXT UNIQUE NOT NULL,
   password_hash    TEXT NOT NULL,
   whatsapp_number  TEXT,
+  is_verified      BOOLEAN DEFAULT FALSE,
+  otp_code         TEXT,
+  otp_expires_at   TIMESTAMPTZ,
   created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
